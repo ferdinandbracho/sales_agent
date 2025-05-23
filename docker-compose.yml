@@ -1,0 +1,123 @@
+# Docker Compose for Kavak AI Agent Development
+# Includes Redis for conversation memory and optional services
+
+version: '3.8'
+
+services:
+  # Redis for conversation memory
+  redis:
+    image: redis:7-alpine
+    container_name: kavak-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL (optional - for production scaling)
+  postgres:
+    image: postgres:15-alpine
+    container_name: kavak-postgres
+    environment:
+      POSTGRES_DB: kavak_db
+      POSTGRES_USER: kavak_user
+      POSTGRES_PASSWORD: kavak_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    profiles:
+      - full  # Only start with --profile full
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kavak_user -d kavak_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ChromaDB (vector database)
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: kavak-chromadb
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+    restart: unless-stopped
+    profiles:
+      - full  # Only start with --profile full
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Main Kavak AI Agent API
+  kavak-api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: kavak-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - REDIS_URL=redis://redis:6379
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src:ro  # Mount source for development
+      - ./data:/app/data:ro
+      - app_logs:/app/logs
+    restart: unless-stopped
+    profiles:
+      - api  # Start with --profile api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ngrok for webhook tunneling (development only)
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: kavak-ngrok
+    ports:
+      - "4040:4040"  # ngrok dashboard
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    command: ["http", "kavak-api:8000", "--log=stdout"]
+    depends_on:
+      kavak-api:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles:
+      - dev  # Only for development with webhooks
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  chroma_data:
+    driver: local
+  app_logs:
+    driver: local
+
+networks:
+  default:
+    name: kavak-network
+    driver: bridge

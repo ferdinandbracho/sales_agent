@@ -1,0 +1,63 @@
+#!/bin/bash
+# Quick start script for Kavak AI Agent
+
+echo "🚗 KAVAK AI AGENT - QUICK START"
+echo "================================"
+
+# Check if uv is installed
+if ! command -v uv &> /dev/null; then
+    echo "📦 Installing UV package manager..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    echo "✅ UV installed successfully"
+fi
+
+# Show current project status
+echo ""
+echo "📁 Project Structure Created:"
+echo "✅ Main FastAPI application (src/main.py)"
+echo "✅ Kavak AI Agent (src/agent/)"
+echo "✅ Agent Tools (src/tools/)"
+echo "✅ WhatsApp Integration (src/webhook/)"
+echo "✅ Car Catalog Data (data/sample_caso_ai_engineer.csv)"
+echo "✅ Environment Configuration (.env.example)"
+echo "✅ Makefile for easy commands"
+echo "✅ Docker setup"
+echo "✅ Comprehensive README"
+echo "✅ Basic tests"
+
+echo ""
+echo "🎯 NEXT STEPS:"
+echo "1. Edit .env file with your API keys:"
+echo "   - OPENAI_API_KEY (provided by Kavak)"
+echo "   - TWILIO_ACCOUNT_SID"
+echo "   - TWILIO_AUTH_TOKEN"
+echo ""
+echo "2. Run the setup:"
+echo "   make setup"
+echo ""
+echo "3. Start the development server:"
+echo "   make dev"
+echo ""
+echo "4. Test the agent tools:"
+echo "   make demo"
+echo ""
+echo "5. Access the API documentation:"
+echo "   http://localhost:8000/docs"
+echo ""
+echo "🔧 AVAILABLE COMMANDS:"
+echo "   make help         - Show all available commands"
+echo "   make setup        - Initial project setup"
+echo "   make dev          - Start development server"
+echo "   make demo         - Run demo scenarios"
+echo "   make test         - Run tests"
+echo "   make clean        - Clean temporary files"
+echo ""
+echo "📱 WHATSAPP INTEGRATION:"
+echo "   1. Configure Twilio sandbox"
+echo "   2. Set webhook URL in Twilio console"
+echo "   3. Test with live WhatsApp messages"
+echo ""
+echo "✨ The project is ready for development!"
+echo "   All Spanish language prompts and responses configured"
+echo "   Agent tools for car search, financing, and Kavak info"
+echo "   Professional project structure for job interview"

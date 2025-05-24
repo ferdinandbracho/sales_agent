@@ -39,7 +39,7 @@ install-deps: ## Install/update dependencies with uv
 	@echo "📦 Installing dependencies with uv..."
 	uv sync
 
-dev: ## Start development environment  
+dev: ## Start development environment
 	@echo "🔥 Starting Kavak AI Agent in development mode..."
 	@echo "📱 API will be available at: http://localhost:8000"
 	@echo "📊 API Docs: http://localhost:8000/docs"
@@ -56,7 +56,12 @@ test: ## Run tests
 
 test-tools: ## Test individual agent tools
 	@echo "🔧 Testing agent tools..."
-	uv run python -c "from src.tools.car_search import buscar_autos_por_presupuesto; print(buscar_autos_por_presupuesto(300000, 'Toyota'))"
+	@echo "\n🚗 Testing car search tool..."
+	uv run python -c "from src.tools.car_search import buscar_autos_por_presupuesto; print(buscar_autos_por_presupuesto.invoke({'presupuesto_maximo': 300000, 'marca': 'Toyota'}))"
+	@echo "\n💰 Testing financing tool..."
+	uv run python -c "from src.tools.financing import calcular_financiamiento; print(calcular_financiamiento.invoke({'precio_auto': 250000, 'enganche': 50000, 'anos': 4}))"
+	@echo "\nℹ️  Testing Kavak info tool..."
+	uv run python -c "from src.tools.kavak_info import informacion_kavak; print(informacion_kavak.invoke({'pregunta': 'garantía'}))"
 
 demo: ## Run demo conversation scenarios
 	@echo "🎭 Running demo scenarios..."
@@ -134,8 +139,9 @@ repl: ## Start Python REPL with project context
 	@echo "🐍 Starting Python REPL with Kavak AI Agent context..."
 	uv run python -i -c "from src.config import settings; from src.tools import *; print('Kavak AI Agent REPL ready! 🚗')"
 
-shell: ## Start uv shell with virtual environment
-	uv shell
+shell: ## Start shell with virtual environment activated
+	@echo "🐚 Starting shell with virtual environment..."
+	@echo "Run 'uv run python' to use the virtual environment's Python"
 
 # Project info
 info: ## Show project information

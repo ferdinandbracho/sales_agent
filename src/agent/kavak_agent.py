@@ -38,9 +38,9 @@ class KavakSalesAgent:
     def _setup_llm(self) -> ChatOpenAI:
         """Configura el modelo de lenguaje"""
         return ChatOpenAI(
-            model=settings.openai_model,
+            model=settings.openai.OPENAI_MODEL,
             temperature=0.7,  # Slightly creative for sales conversations
-            openai_api_key=settings.openai_api_key,
+            openai_api_key=settings.openai.OPENAI_API_KEY,
             max_tokens=1000,  # Limit for WhatsApp optimization
         )
 

@@ -4,10 +4,6 @@ Modelos de datos para el agente de Kavak
 """
 
 # Placeholder for future data models
-# TODO: Add Pydantic models for:
-# - Car data
-# - Conversation history  
-# - Financing options
-# - User preferences
+# TODO: Add Pydantic models when needed
 
 __all__ = []

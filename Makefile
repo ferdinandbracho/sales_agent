@@ -39,7 +39,7 @@ install-deps: ## Install/update dependencies with uv
 	@echo "📦 Installing dependencies with uv..."
 	uv sync
 
-dev: ## Start development environment  
+dev: ## Start development environment
 	@echo "🔥 Starting Kavak AI Agent in development mode..."
 	@echo "📱 API will be available at: http://localhost:8000"
 	@echo "📊 API Docs: http://localhost:8000/docs"
@@ -56,7 +56,12 @@ test: ## Run tests
 
 test-tools: ## Test individual agent tools
 	@echo "🔧 Testing agent tools..."
-	uv run python -c "from src.tools.car_search import buscar_autos_por_presupuesto; print(buscar_autos_por_presupuesto(300000, 'Toyota'))"
+	@echo "\n🚗 Testing car search tool..."
+	uv run python -c "from src.tools.car_search import buscar_autos_por_presupuesto; print(buscar_autos_por_presupuesto.invoke({'presupuesto_maximo': 300000, 'marca': 'Toyota'}))"
+	@echo "\n💰 Testing financing tool..."
+	uv run python -c "from src.tools.financing import calcular_financiamiento; print(calcular_financiamiento.invoke({'precio_auto': 250000, 'enganche': 50000, 'anos': 4}))"
+	@echo "\nℹ️  Testing Kavak info tool..."
+	uv run python -c "from src.tools.kavak_info import informacion_kavak; print(informacion_kavak.invoke({'pregunta': 'garantía'}))"
 
 demo: ## Run demo conversation scenarios
 	@echo "🎭 Running demo scenarios..."
@@ -78,9 +83,33 @@ format: ## Format code
 	uv run isort src/
 	@echo "✅ Code formatted"
 
-logs: ## Show application logs (placeholder for when using Docker)
-	@echo "📋 Application logs:"
-	@echo "In development mode, logs appear in terminal"
+logs: ## Show application logs and logging configuration
+	@echo "📋 Application Logs"
+	@echo "================"
+	@echo "Log File: data/logs/app.log"
+	@echo "Current Log Level: $$(grep LOG_LEVEL .env 2>/dev/null | cut -d '=' -f2 || echo 'INFO (default)')"
+	@echo "\n🔍 Viewing Logs:"
+	@echo "  make logs-tail    # Follow logs in real-time"
+	@echo "  make logs-view    # View last 50 log entries"
+	@echo "  make logs-errors  # View only error messages"
+
+logs-tail: ## Follow application logs in real-time
+	@echo "🔍 Following application logs (Ctrl+C to exit)..."
+	@mkdir -p data/logs
+	@touch data/logs/app.log
+	@tail -f data/logs/app.log
+
+logs-view: ## View recent log entries
+	@echo "📜 Last 50 log entries:"
+	@mkdir -p data/logs
+	@touch data/logs/app.log
+	@tail -n 50 data/logs/app.log 2>/dev/null || echo "No log file found at data/logs/app.log"
+
+logs-errors: ## View error logs
+	@echo "❌ Error log entries:"
+	@mkdir -p data/logs
+	@touch data/logs/app.log
+	@grep -i "error\|exception\|critical\|fatal" data/logs/app.log 2>/dev/null || echo "No errors found in logs"
 
 clean: ## Clean temporary files
 	@echo "🧹 Cleaning temporary files..."
@@ -134,8 +163,9 @@ repl: ## Start Python REPL with project context
 	@echo "🐍 Starting Python REPL with Kavak AI Agent context..."
 	uv run python -i -c "from src.config import settings; from src.tools import *; print('Kavak AI Agent REPL ready! 🚗')"
 
-shell: ## Start uv shell with virtual environment
-	uv shell
+shell: ## Start shell with virtual environment activated
+	@echo "🐚 Starting shell with virtual environment..."
+	@echo "Run 'uv run python' to use the virtual environment's Python"
 
 # Project info
 info: ## Show project information

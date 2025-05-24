@@ -3,8 +3,11 @@ Kavak Information Tool - Información sobre servicios y valor de Kavak
 Responde preguntas sobre la empresa, garantías, proceso de compra, etc.
 USA RAG con contenido scrapeado del sitio web
 """
+
 from typing import Optional
+
 from langchain.tools import tool
+
 from ..config import MEXICAN_CONFIG
 from ..knowledge.kavak_knowledge import get_kavak_knowledge_base
 
@@ -15,23 +18,23 @@ KAVAK_INFO = {
         "descripcion": "Kavak es la plataforma líder de autos seminuevos en México y Latinoamérica",
         "beneficios": [
             "Garantía de 3 meses o 3,000 km (lo que ocurra primero)",
-            "Financiamiento hasta 84 meses con tasas competitivas", 
+            "Financiamiento hasta 84 meses con tasas competitivas",
             "Proceso 100% digital desde casa",
             "Inspección de 240 puntos de calidad",
             "Intercambio garantizado",
-            "Servicio postventa especializado"
-        ]
+            "Servicio postventa especializado",
+        ],
     },
     "garantia": {
         "cobertura": "3 meses o 3,000 kilómetros",
         "incluye": [
             "Motor y transmisión",
-            "Sistema eléctrico", 
+            "Sistema eléctrico",
             "Frenos y suspensión",
             "Aire acondicionado",
-            "Reparaciones mecánicas mayores"
+            "Reparaciones mecánicas mayores",
         ],
-        "exclusiones": "Desgaste normal, neumáticos, filtros, aceites"
+        "exclusiones": "Desgaste normal, neumáticos, filtros, aceites",
     },
     "proceso": {
         "pasos": [
@@ -39,7 +42,7 @@ KAVAK_INFO = {
             "Agenda cita para verlo y probarlo",
             "Solicita financiamiento si lo necesitas",
             "Completa la compra 100% digital",
-            "Recibe tu auto con garantía"
+            "Recibe tu auto con garantía",
         ]
     },
     "financiamiento": {
@@ -48,37 +51,41 @@ KAVAK_INFO = {
             "Tasa desde 10% anual",
             "Aprobación en 24 horas",
             "Sin aval ni garantías adicionales",
-            "Pago anticipado sin penalización"
+            "Pago anticipado sin penalización",
         ]
     },
     "ubicaciones": {
         "principales": [
             "Ciudad de México (múltiples sucursales)",
             "Guadalajara, Jalisco",
-            "Monterrey, Nuevo León", 
+            "Monterrey, Nuevo León",
             "Puebla, Puebla",
             "Tijuana, Baja California",
-            "Mérida, Yucatán"
+            "Mérida, Yucatán",
         ]
-    }
+    },
 }
+
 
 @tool
 def informacion_kavak(pregunta: str) -> str:
     """
     Proporciona información sobre servicios, garantías y propuesta de valor de Kavak.
-    
+
     Args:
         pregunta: Pregunta específica sobre Kavak
-        
+
     Returns:
         Información detallada sobre Kavak en español mexicano
     """
     try:
         pregunta_lower = pregunta.lower()
-        
+
         # Garantía
-        if any(palabra in pregunta_lower for palabra in ["garantía", "garantia", "cobertura", "protección"]):
+        if any(
+            palabra in pregunta_lower
+            for palabra in ["garantía", "garantia", "cobertura", "protección"]
+        ):
             return f"""
 ✅ **Garantía Kavak**
 
@@ -97,9 +104,18 @@ def informacion_kavak(pregunta: str) -> str:
 
 ¿Te interesa algún auto en particular para explicarte más detalles? 🚗
 """
-        
+
         # Financiamiento
-        elif any(palabra in pregunta_lower for palabra in ["financiamiento", "credito", "crédito", "pago", "mensualidad"]):
+        elif any(
+            palabra in pregunta_lower
+            for palabra in [
+                "financiamiento",
+                "credito",
+                "crédito",
+                "pago",
+                "mensualidad",
+            ]
+        ):
             return f"""
 💰 **Financiamiento Kavak**
 
@@ -116,9 +132,12 @@ def informacion_kavak(pregunta: str) -> str:
 
 💳 ¿Quieres que calcule un plan específico para ti? Solo necesito saber tu presupuesto 😊
 """
-        
+
         # Proceso de compra
-        elif any(palabra in pregunta_lower for palabra in ["proceso", "comprar", "compra", "como funciona", "pasos"]):
+        elif any(
+            palabra in pregunta_lower
+            for palabra in ["proceso", "comprar", "compra", "como funciona", "pasos"]
+        ):
             return f"""
 🛒 **Proceso de Compra Kavak**
 
@@ -134,9 +153,12 @@ def informacion_kavak(pregunta: str) -> str:
 
 ¿En qué paso te gustaría que te ayude? 😊
 """
-        
-        # Ubicaciones  
-        elif any(palabra in pregunta_lower for palabra in ["ubicación", "ubicacion", "sucursal", "donde", "dirección"]):
+
+        # Ubicaciones
+        elif any(
+            palabra in pregunta_lower
+            for palabra in ["ubicación", "ubicacion", "sucursal", "donde", "dirección"]
+        ):
             return f"""
 📍 **Sucursales Kavak en México**
 
@@ -155,9 +177,12 @@ def informacion_kavak(pregunta: str) -> str:
 
 ¿En qué ciudad te encuentras? Te ayudo a encontrar la sucursal más cercana 📍
 """
-        
+
         # Ventajas/propuesta de valor
-        elif any(palabra in pregunta_lower for palabra in ["ventaja", "beneficio", "por qué", "porque", "diferencia"]):
+        elif any(
+            palabra in pregunta_lower
+            for palabra in ["ventaja", "beneficio", "por qué", "porque", "diferencia"]
+        ):
             return f"""
 🏆 **¿Por qué elegir Kavak?**
 
@@ -176,9 +201,12 @@ def informacion_kavak(pregunta: str) -> str:
 
 ¿Qué es lo más importante para ti al comprar un auto? 🤔
 """
-        
+
         # Intercambio
-        elif any(palabra in pregunta_lower for palabra in ["intercambio", "cambio", "devolver", "regresar"]):
+        elif any(
+            palabra in pregunta_lower
+            for palabra in ["intercambio", "cambio", "devolver", "regresar"]
+        ):
             return f"""
 🔄 **Intercambio Kavak**
 
@@ -196,7 +224,7 @@ Porque estamos seguros de la calidad de nuestros autos.
 
 ¿Te interesa conocer más sobre algún auto específico? 🚗
 """
-        
+
         # Default - información general
         else:
             return f"""
@@ -223,15 +251,16 @@ Porque estamos seguros de la calidad de nuestros autos.
 • Agendar prueba de manejo 📅
 • Información de garantía ✅
 """
-        
+
     except Exception as e:
         return f"❌ Error obteniendo información: {str(e)}. ¿Puedes ser más específico en tu pregunta?"
+
 
 @tool
 def agendar_cita() -> str:
     """
     Información sobre cómo agendar una cita para ver un auto.
-    
+
     Returns:
         Instrucciones para agendar cita
     """
@@ -259,11 +288,12 @@ def agendar_cita() -> str:
 ¿Te gustaría que te ayude a pre-agendar para un auto específico? 😊
 """
 
+
 @tool
 def comparar_con_competencia() -> str:
     """
     Compara Kavak con otras opciones del mercado.
-    
+
     Returns:
         Comparación de Kavak vs competencia
     """

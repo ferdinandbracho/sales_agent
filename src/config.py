@@ -1,54 +1,100 @@
 """
 Configuration settings for Kavak AI Agent
 """
-import os
+
+from pathlib import Path
 from typing import Optional
-from pydantic import BaseSettings
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class LoggingSettings(BaseSettings):
+    """Logging configuration settings"""
+
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s [%(filename)s:%(lineno)d]"
+    LOG_FILE: str = "kavak_agent.log"
+    LOG_DIR: str = "logs"
+    MAX_BYTES: int = 10 * 1024 * 1024  # 10 MB
+    BACKUP_COUNT: int = 3
+
+    @property
+    def LOG_PATH(self) -> Path:
+        """Get the full path to the log file"""
+        return Path(self.LOG_DIR) / self.LOG_FILE
+
+
+class OpenAISettings(BaseSettings):
+    """OpenAI configuration settings"""
+
+    OPENAI_API_KEY: str = ""
+    OPENAI_MODEL: str = "gpt-4o"
+
+
+class TwilioSettings(BaseSettings):
+    """Twilio configuration settings"""
+
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_PHONE_NUMBER: str = "whatsapp:+14155238886"
+
+
+class RedisSettings(BaseSettings):
+    """Redis configuration settings"""
+
+    REDIS_URL: str = "redis://localhost:6379"
+    REDIS_PASSWORD: Optional[str] = None
+
+
+class ChromaDBSettings(BaseSettings):
+    """ChromaDB configuration settings"""
+
+    CHROMA_HOST: str = "localhost"
+    CHROMA_PORT: int = 8001
+    CHROMA_PERSIST_DIRECTORY: str = "./chroma_data"
 
 
 class Settings(BaseSettings):
     """Application settings"""
-    
+
     # Environment
-    environment: str = os.getenv("ENVIRONMENT", "development")
-    log_level: str = os.getenv("LOG_LEVEL", "INFO")
-    
-    # OpenAI Configuration
-    openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
-    openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4o")
-    
-    # Twilio Configuration
-    twilio_account_sid: str = os.getenv("TWILIO_ACCOUNT_SID", "")
-    twilio_auth_token: str = os.getenv("TWILIO_AUTH_TOKEN", "")
-    twilio_phone_number: str = os.getenv("TWILIO_PHONE_NUMBER", "whatsapp:+14155238886")
-    
-    # Redis Configuration
-    redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379")
-    redis_password: Optional[str] = os.getenv("REDIS_PASSWORD")
-    
-    # ChromaDB Configuration
-    chroma_host: str = os.getenv("CHROMA_HOST", "localhost")
-    chroma_port: int = int(os.getenv("CHROMA_PORT", "8001"))
-    chroma_persist_directory: str = os.getenv("CHROMA_PERSIST_DIRECTORY", "./chroma_data")
-    
+    ENVIRONMENT: str = "development"
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+
+    # Logging
+    logging: LoggingSettings = Field(default_factory=LoggingSettings)
+
+    # External Services
+    openai: OpenAISettings = Field(default_factory=OpenAISettings)
+    twilio: TwilioSettings = Field(default_factory=TwilioSettings)
+    redis: RedisSettings = Field(default_factory=RedisSettings)
+    chroma: ChromaDBSettings = Field(default_factory=ChromaDBSettings)
+
     # Agent Configuration
-    agent_language: str = os.getenv("AGENT_LANGUAGE", "es_MX")
-    max_conversation_turns: int = int(os.getenv("MAX_CONVERSATION_TURNS", "10"))
-    response_max_length: int = int(os.getenv("RESPONSE_MAX_LENGTH", "1500"))
-    
+    AGENT_LANGUAGE: str = "es_MX"
+    MAX_CONVERSATION_TURNS: int = 10
+    RESPONSE_MAX_LENGTH: int = 1500
+
     # Mexican Market Configuration
-    currency: str = "MXN"
-    currency_symbol: str = "$"
-    default_interest_rate: float = 0.10  # 10% as specified in requirements
-    financing_years_options: list = [3, 4, 5, 6]
-    
-    # Application
-    port: int = int(os.getenv("PORT", "8000"))
-    host: str = os.getenv("HOST", "0.0.0.0")
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    CURRENCY: str = "MXN"
+    CURRENCY_SYMBOL: str = "$"
+    DEFAULT_INTEREST_RATE: float = 0.10  # 10% as specified in requirements
+    FINANCING_YEARS_OPTIONS: list = [3, 4, 5, 6]
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+        env_nested_delimiter="__",  # Allows nested settings with __
+    )
+
+    @property
+    def is_production(self) -> bool:
+        """Check if the application is running in production"""
+        return self.ENVIRONMENT.lower() == "production"
 
 
 # Global settings instance
@@ -59,32 +105,33 @@ settings = Settings()
 MEXICAN_CONFIG = {
     "greetings": {
         "morning": "¡Buenos días!",
-        "afternoon": "¡Buenas tardes!", 
+        "afternoon": "¡Buenas tardes!",
         "evening": "¡Buenas noches!",
-        "general": "¡Hola!"
+        "general": "¡Hola!",
     },
     "expressions": {
         "positive": ["¡Órale!", "¡Padrísimo!", "¡Excelente!", "¡Perfecto!"],
         "thinking": ["Déjame verificar...", "Un momento por favor...", "Revisando..."],
-        "help": ["¿En qué te puedo ayudar?", "¿Qué necesitas?", "¿Cómo te ayudo?"]
+        "help": ["¿En qué te puedo ayudar?", "¿Qué necesitas?", "¿Cómo te ayudo?"],
     },
     "emojis": {
         "car": "🚗",
-        "money": "💰", 
+        "money": "💰",
         "phone": "📱",
         "happy": "😊",
         "check": "✅",
         "error": "❌",
         "thinking": "🤔",
-        "search": "🔍"
-    }
+        "search": "🔍",
+    },
 }
 
 # Error messages in Spanish
 SPANISH_ERROR_RESPONSES = {
     "openai_error": "Disculpa, tengo problemas técnicos. ¿Puedes intentar en un momento? 🔧",
-    "search_empty": "No encontré autos con esos criterios. ¿Quieres ajustar tu búsqueda? 🔍", 
+    "search_empty": "No encontré autos con esos criterios. ¿Quieres ajustar tu búsqueda? 🔍",
     "invalid_budget": "El presupuesto debe ser un número válido. ¿Puedes escribirlo nuevamente? 💰",
     "general_error": "Ups, algo salió mal. ¿Puedes intentar de nuevo? 😅",
-    "timeout_error": "La búsqueda está tomando mucho tiempo. ¿Intentamos con otros criterios? ⏱️"
+    "timeout_error": "La búsqueda está tomando mucho tiempo. ¿Intentamos con otros criterios? ⏱️",
+    "empty_response": "No recibí una respuesta del agente. Por favor, intenta de nuevo en un momento. 🔄",
 }

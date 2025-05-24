@@ -2,18 +2,30 @@
 Twilio WhatsApp Webhook Handler
 Maneja mensajes de WhatsApp enviados por Twilio
 """
-from fastapi import APIRouter, Request, Form, HTTPException
+
+import logging
+
+from fastapi import APIRouter, Form, HTTPException
 from fastapi.responses import Response
 from twilio.twiml.messaging_response import MessagingResponse
-import logging
-from typing import Optional
-import asyncio
 
-from ..agent.kavak_agent import create_kavak_agent
-from ..tools.car_search import buscar_autos_por_presupuesto, buscar_auto_especifico, obtener_autos_populares
-from ..tools.financing import calcular_financiamiento, calcular_multiples_opciones, calcular_presupuesto_por_mensualidad
-from ..tools.kavak_info import informacion_kavak, agendar_cita, comparar_con_competencia
-from ..config import settings, SPANISH_ERROR_RESPONSES
+from src.agent.kavak_agent import create_kavak_agent
+from src.config import SPANISH_ERROR_RESPONSES
+from src.tools.car_search import (
+    buscar_auto_especifico,
+    buscar_autos_por_presupuesto,
+    obtener_autos_populares,
+)
+from src.tools.financing import (
+    calcular_financiamiento,
+    calcular_multiples_opciones,
+    calcular_presupuesto_por_mensualidad,
+)
+from src.tools.kavak_info import (
+    agendar_cita,
+    comparar_con_competencia,
+    informacion_kavak,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -22,27 +34,27 @@ logger = logging.getLogger(__name__)
 # Create router
 router = APIRouter()
 
+
 # Initialize agent with tools
 def get_kavak_agent():
     """Initialize Kavak agent with all tools"""
     tools = [
         # Car search tools
         buscar_autos_por_presupuesto,
-        buscar_auto_especifico, 
+        buscar_auto_especifico,
         obtener_autos_populares,
-        
         # Financing tools
         calcular_financiamiento,
         calcular_multiples_opciones,
         calcular_presupuesto_por_mensualidad,
-        
         # Kavak information tools
         informacion_kavak,
         agendar_cita,
-        comparar_con_competencia
+        comparar_con_competencia,
     ]
-    
+
     return create_kavak_agent(tools)
+
 
 # Global agent instance
 kavak_agent = get_kavak_agent()
@@ -50,104 +62,116 @@ kavak_agent = get_kavak_agent()
 # Simple in-memory conversation storage (for demo - use Redis in production)
 conversation_memory = {}
 
+
 @router.post("/whatsapp")
 async def whatsapp_webhook(
-    Body: str = Form(...),           # Message text
-    From: str = Form(...),           # User's WhatsApp number  
-    To: str = Form(...),             # Twilio number
-    MessageSid: str = Form(...),     # Unique message ID
-    NumMedia: str = Form(default="0") # Number of media files
+    Body: str = Form(...),  # Message text
+    From: str = Form(...),  # User's WhatsApp number
+    To: str = Form(...),  # Twilio number
+    MessageSid: str = Form(...),  # Unique message ID
+    NumMedia: str = Form(default="0"),  # Number of media files
 ):
     """
     Webhook endpoint for Twilio WhatsApp messages
     Receives messages and responds with TwiML
     """
     try:
-        logger.info(f"📱 WhatsApp message received:")
+        logger.info("📱 WhatsApp message received")
         logger.info(f"   From: {From}")
         logger.info(f"   Body: {Body}")
         logger.info(f"   MessageSid: {MessageSid}")
-        
+
         # Clean phone number (remove whatsapp: prefix)
         user_phone = From.replace("whatsapp:", "")
-        
+
         # Get conversation context
         session_id = f"whatsapp_{user_phone}"
         conversation_history = conversation_memory.get(session_id, [])
-        
+
         # Process message with Kavak agent
         agent_response = await process_with_kavak_agent(
             message=Body,
             session_id=session_id,
-            conversation_history=conversation_history
+            conversation_history=conversation_history,
         )
-        
+
         # Save conversation turn
-        conversation_history.append({
-            "user": Body,
-            "agent": agent_response,
-            "timestamp": MessageSid
-        })
-        
+        conversation_history.append(
+            {"user": Body, "agent": agent_response, "timestamp": MessageSid}
+        )
+
         # Keep only last 10 turns to manage memory
         conversation_memory[session_id] = conversation_history[-10:]
-        
+
         # Create TwiML response
         twiml_response = MessagingResponse()
         twiml_response.message(agent_response)
-        
+
         logger.info(f"📤 Sending response: {agent_response[:100]}...")
-        
-        return Response(
-            content=str(twiml_response),
-            media_type="application/xml"
-        )
-        
+
+        return Response(content=str(twiml_response), media_type="application/xml")
+
     except Exception as e:
         logger.error(f"❌ Error processing WhatsApp message: {e}")
-        
+
         # Send error response to user
         error_response = MessagingResponse()
         error_response.message(SPANISH_ERROR_RESPONSES["general_error"])
-        
-        return Response(
-            content=str(error_response),
-            media_type="application/xml"
-        )
+
+        return Response(content=str(error_response), media_type="application/xml")
+
 
 async def process_with_kavak_agent(
-    message: str, 
-    session_id: str, 
-    conversation_history: list
+    message: str, session_id: str, conversation_history: list
 ) -> str:
     """
     Process message with Kavak AI agent
-    
+
     Args:
         message: User's message
         session_id: Session identifier
         conversation_history: Previous conversation turns
-        
+
     Returns:
         Agent's response optimized for WhatsApp
     """
+    logger.info(f"🔍 Processing message with agent: {message}")
+
     try:
         # Process with agent
+        logger.info("🤖 Sending message to agent...")
         response = await kavak_agent.process_message(
             message=message,
             session_id=session_id,
-            conversation_history=conversation_history
+            conversation_history=conversation_history,
         )
-        
+
+        logger.info(
+            f"✅ Agent response: {response[:200]}..."
+            if len(str(response)) > 200
+            else f"✅ Agent response: {response}"
+        )
+
+        if not response or response.strip() == "":
+            logger.warning("⚠️ Agent returned empty response, using fallback")
+            return SPANISH_ERROR_RESPONSES["empty_response"]
+
         return response
-        
+
     except Exception as e:
-        logger.error(f"Agent processing error: {e}")
-        
+        logger.error(f"❌ Agent processing error: {str(e)}", exc_info=True)
+        logger.error(f"🔧 Error type: {type(e).__name__}")
+
+        # Log the full error for debugging
+        import traceback
+
+        logger.error(f"📜 Stack trace: {traceback.format_exc()}")
+
         # Return contextual fallback based on message content
         message_lower = message.lower()
-        
+
         if any(word in message_lower for word in ["hola", "hello", "hi", "buenas"]):
+            logger.info("👋 Using greeting fallback")
             return """
 ¡Hola! Soy tu agente comercial de Kavak 🚗
 
@@ -159,8 +183,9 @@ Te puedo ayudar con:
 
 ¿Qué tipo de auto buscas?
 """
-        
+
         elif any(word in message_lower for word in ["auto", "carro", "vehiculo"]):
+            logger.info("🚗 Using car search fallback")
             return """
 ¡Perfecto! Te ayudo a encontrar tu auto ideal 🚗
 
@@ -171,8 +196,11 @@ Te puedo ayudar con:
 
 ¡Tengo excelentes opciones para ti! 😊
 """
-        
-        elif any(word in message_lower for word in ["precio", "financiamiento", "pago"]):
+
+        elif any(
+            word in message_lower for word in ["precio", "financiamiento", "pago"]
+        ):
+            logger.info("💰 Using financing fallback")
             return """
 💰 ¡Claro! Te ayudo con el financiamiento.
 
@@ -184,9 +212,10 @@ En Kavak ofrecemos:
 
 ¿Cuál es el precio del auto que te interesa? Te calculo las mensualidades 📊
 """
-        
         else:
+            logger.warning(f"⚠️ Using general error fallback for message: {message}")
             return SPANISH_ERROR_RESPONSES["general_error"]
+
 
 @router.get("/webhook-status")
 async def webhook_status():
@@ -195,8 +224,9 @@ async def webhook_status():
         "status": "active",
         "service": "Kavak WhatsApp Webhook",
         "agent_tools": len(kavak_agent.tools),
-        "conversation_sessions": len(conversation_memory)
+        "conversation_sessions": len(conversation_memory),
     }
+
 
 @router.post("/test-agent")
 async def test_agent_locally(request: dict):
@@ -206,24 +236,25 @@ async def test_agent_locally(request: dict):
     try:
         message = request.get("message", "")
         session_id = request.get("session_id", "test_session")
-        
+
         if not message:
             raise HTTPException(status_code=400, detail="Message is required")
-        
+
         response = await process_with_kavak_agent(
             message=message,
             session_id=session_id,
-            conversation_history=conversation_memory.get(session_id, [])
+            conversation_history=conversation_memory.get(session_id, []),
         )
-        
+
         return {
             "user_message": message,
             "agent_response": response,
-            "session_id": session_id
+            "session_id": session_id,
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 # Conversation memory management
 @router.delete("/conversations/{session_id}")
@@ -235,15 +266,18 @@ async def clear_conversation(session_id: str):
     else:
         return {"message": f"Conversation {session_id} not found"}
 
+
 @router.get("/conversations")
 async def list_conversations():
     """List active conversation sessions"""
     sessions = []
     for session_id, history in conversation_memory.items():
-        sessions.append({
-            "session_id": session_id,
-            "message_count": len(history),
-            "last_message": history[-1]["user"] if history else None
-        })
-    
+        sessions.append(
+            {
+                "session_id": session_id,
+                "message_count": len(history),
+                "last_message": history[-1]["user"] if history else None,
+            }
+        )
+
     return {"active_sessions": len(sessions), "sessions": sessions}

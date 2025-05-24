@@ -136,7 +136,7 @@ async def process_with_kavak_agent(
         Agent's response optimized for WhatsApp
     """
     logger.info(f"🔍 Processing message with agent: {message}")
-    
+
     try:
         # Process with agent
         logger.info("🤖 Sending message to agent...")
@@ -145,13 +145,17 @@ async def process_with_kavak_agent(
             session_id=session_id,
             conversation_history=conversation_history,
         )
-        
-        logger.info(f"✅ Agent response: {response[:200]}..." if len(str(response)) > 200 else f"✅ Agent response: {response}")
-        
+
+        logger.info(
+            f"✅ Agent response: {response[:200]}..."
+            if len(str(response)) > 200
+            else f"✅ Agent response: {response}"
+        )
+
         if not response or response.strip() == "":
             logger.warning("⚠️ Agent returned empty response, using fallback")
             return SPANISH_ERROR_RESPONSES["empty_response"]
-            
+
         return response
 
     except Exception as e:
@@ -160,6 +164,7 @@ async def process_with_kavak_agent(
 
         # Log the full error for debugging
         import traceback
+
         logger.error(f"📜 Stack trace: {traceback.format_exc()}")
 
         # Return contextual fallback based on message content
@@ -192,7 +197,9 @@ Te puedo ayudar con:
 ¡Tengo excelentes opciones para ti! 😊
 """
 
-        elif any(word in message_lower for word in ["precio", "financiamiento", "pago"]):
+        elif any(
+            word in message_lower for word in ["precio", "financiamiento", "pago"]
+        ):
             logger.info("💰 Using financing fallback")
             return """
 💰 ¡Claro! Te ayudo con el financiamiento.

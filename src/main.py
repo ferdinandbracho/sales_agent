@@ -130,9 +130,9 @@ app.include_router(
     prefix="/webhook",
     tags=["WhatsApp"],
     responses={
-        200: {"description": "Solicitud exitosa"},
-        400: {"description": "Solicitud inválida"},
-        500: {"description": "Error interno del servidor"},
+        200: {"description": "Success"},
+        400: {"description": "Bad Request"},
+        500: {"description": "Internal Server Error"},
     },
 )
 
@@ -144,5 +144,5 @@ if __name__ == "__main__":
         port=port,
         reload=True,
         log_level="info",
-        proxy_headers=True,
+        #proxy_headers=True, # Only for production
     )

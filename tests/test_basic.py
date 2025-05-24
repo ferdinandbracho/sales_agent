@@ -112,7 +112,3 @@ class TestSpanishResponses:
         # Should not contain common English words
         english_words = ["warranty", "financing", "car", "price", "payment"]
         assert not any(word.lower() in result.lower() for word in english_words)
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])

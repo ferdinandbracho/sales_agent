@@ -1,6 +1,3 @@
-# Docker Compose for Kavak AI Agent Development
-# Includes Redis for conversation memory and optional services
-
 version: '3.8'
 
 services:
@@ -16,27 +13,6 @@ services:
     command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # PostgreSQL (optional - for production scaling)
-  postgres:
-    image: postgres:15-alpine
-    container_name: kavak-postgres
-    environment:
-      POSTGRES_DB: kavak_db
-      POSTGRES_USER: kavak_user
-      POSTGRES_PASSWORD: kavak_password
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    profiles:
-      - full  # Only start with --profile full
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kavak_user -d kavak_db"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -62,7 +38,7 @@ services:
 
   # Main Kavak AI Agent API
   kavak-api:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: kavak-api
@@ -81,10 +57,7 @@ services:
     volumes:
       - ./src:/app/src:ro  # Mount source for development
       - ./data:/app/data:ro
-      - app_logs:/app/logs
     restart: unless-stopped
-    profiles:
-      - api  # Start with --profile api
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -110,11 +83,7 @@ services:
 volumes:
   redis_data:
     driver: local
-  postgres_data:
-    driver: local
   chroma_data:
-    driver: local
-  app_logs:
     driver: local
 
 networks:

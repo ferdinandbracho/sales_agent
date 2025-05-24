@@ -83,9 +83,33 @@ format: ## Format code
 	uv run isort src/
 	@echo "✅ Code formatted"
 
-logs: ## Show application logs (placeholder for when using Docker)
-	@echo "📋 Application logs:"
-	@echo "In development mode, logs appear in terminal"
+logs: ## Show application logs and logging configuration
+	@echo "📋 Application Logs"
+	@echo "================"
+	@echo "Log File: data/logs/app.log"
+	@echo "Current Log Level: $$(grep LOG_LEVEL .env 2>/dev/null | cut -d '=' -f2 || echo 'INFO (default)')"
+	@echo "\n🔍 Viewing Logs:"
+	@echo "  make logs-tail    # Follow logs in real-time"
+	@echo "  make logs-view    # View last 50 log entries"
+	@echo "  make logs-errors  # View only error messages"
+
+logs-tail: ## Follow application logs in real-time
+	@echo "🔍 Following application logs (Ctrl+C to exit)..."
+	@mkdir -p data/logs
+	@touch data/logs/app.log
+	@tail -f data/logs/app.log
+
+logs-view: ## View recent log entries
+	@echo "📜 Last 50 log entries:"
+	@mkdir -p data/logs
+	@touch data/logs/app.log
+	@tail -n 50 data/logs/app.log 2>/dev/null || echo "No log file found at data/logs/app.log"
+
+logs-errors: ## View error logs
+	@echo "❌ Error log entries:"
+	@mkdir -p data/logs
+	@touch data/logs/app.log
+	@grep -i "error\|exception\|critical\|fatal" data/logs/app.log 2>/dev/null || echo "No errors found in logs"
 
 clean: ## Clean temporary files
 	@echo "🧹 Cleaning temporary files..."

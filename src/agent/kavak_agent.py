@@ -7,7 +7,6 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from langchain.agents import AgentExecutor, create_openai_tools_agent
-from langchain.memory import ConversationBufferMemory
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.schema import AIMessage, BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
@@ -87,24 +86,45 @@ class KavakSalesAgent:
         Returns:
             Respuesta del agente optimizada para WhatsApp
         """
+        logger.info(f"🔍 Procesando mensaje: {message}")
+        
         try:
             # Build conversation history
+            logger.info("📚 Construyendo historial de conversación...")
             chat_history = self._build_chat_history(conversation_history)
+            logger.debug(f"📜 Historial de conversación: {chat_history}")
 
             # Process with agent
+            logger.info("🤖 Invocando al agente...")
             response = await self.agent_executor.ainvoke(
                 {"input": message, "chat_history": chat_history}
             )
+            logger.debug(f"📦 Respuesta cruda del agente: {response}")
 
-            # Extract and optimize response
+            # Extract and validate response
             agent_response = response.get("output", "")
-            optimized_response = self._optimize_for_whatsapp(agent_response)
+            if not agent_response or not agent_response.strip():
+                logger.error("❌ El agente devolvió una respuesta vacía")
+                return SPANISH_ERROR_RESPONSES["empty_response"]
 
+            # Optimize response for WhatsApp
+            logger.info("✨ Optimizando respuesta para WhatsApp...")
+            optimized_response = self._optimize_for_whatsapp(agent_response)
+            
+            logger.info(f"✅ Respuesta final: {optimized_response[:200]}..." if len(optimized_response) > 200 else f"✅ Respuesta final: {optimized_response}")
             return optimized_response
 
         except Exception as e:
-            logger.error(f"Error processing message: {e}")
-            return self._get_fallback_response(message)
+            logger.error(f"❌ Error procesando mensaje: {str(e)}", exc_info=True)
+            logger.error(f"🔧 Tipo de error: {type(e).__name__}")
+            
+            # Log the full error for debugging
+            import traceback
+            logger.error(f"📜 Stack trace: {traceback.format_exc()}")
+            
+            fallback = self._get_fallback_response(message)
+            logger.warning(f"🔄 Usando respuesta de respaldo: {fallback[:200]}...")
+            return fallback
 
     def _build_chat_history(
         self, conversation_history: Optional[List[Dict]]
@@ -129,10 +149,10 @@ class KavakSalesAgent:
         - Emojis mexicanos
         - Formato móvil
         """
-        # Truncate if too long
-        if len(response) > settings.response_max_length:
+        # Truncate if too long (using settings.RESPONSE_MAX_LENGTH instead of settings.response_max_length)
+        if len(response) > settings.RESPONSE_MAX_LENGTH:
             response = (
-                response[: settings.response_max_length - 50]
+                response[: settings.RESPONSE_MAX_LENGTH - 50]
                 + "...\n\n¿Te interesa saber más detalles? 😊"
             )
 

@@ -133,4 +133,5 @@ SPANISH_ERROR_RESPONSES = {
     "invalid_budget": "El presupuesto debe ser un número válido. ¿Puedes escribirlo nuevamente? 💰",
     "general_error": "Ups, algo salió mal. ¿Puedes intentar de nuevo? 😅",
     "timeout_error": "La búsqueda está tomando mucho tiempo. ¿Intentamos con otros criterios? ⏱️",
+    "empty_response": "No recibí una respuesta del agente. Por favor, intenta de nuevo en un momento. 🔄",
 }

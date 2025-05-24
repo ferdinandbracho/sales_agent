@@ -135,23 +135,38 @@ async def process_with_kavak_agent(
     Returns:
         Agent's response optimized for WhatsApp
     """
+    logger.info(f"🔍 Processing message with agent: {message}")
+    
     try:
         # Process with agent
+        logger.info("🤖 Sending message to agent...")
         response = await kavak_agent.process_message(
             message=message,
             session_id=session_id,
             conversation_history=conversation_history,
         )
-
+        
+        logger.info(f"✅ Agent response: {response[:200]}..." if len(str(response)) > 200 else f"✅ Agent response: {response}")
+        
+        if not response or response.strip() == "":
+            logger.warning("⚠️ Agent returned empty response, using fallback")
+            return SPANISH_ERROR_RESPONSES["empty_response"]
+            
         return response
 
     except Exception as e:
-        logger.error(f"Agent processing error: {e}")
+        logger.error(f"❌ Agent processing error: {str(e)}", exc_info=True)
+        logger.error(f"🔧 Error type: {type(e).__name__}")
+
+        # Log the full error for debugging
+        import traceback
+        logger.error(f"📜 Stack trace: {traceback.format_exc()}")
 
         # Return contextual fallback based on message content
         message_lower = message.lower()
 
         if any(word in message_lower for word in ["hola", "hello", "hi", "buenas"]):
+            logger.info("👋 Using greeting fallback")
             return """
 ¡Hola! Soy tu agente comercial de Kavak 🚗
 
@@ -165,6 +180,7 @@ Te puedo ayudar con:
 """
 
         elif any(word in message_lower for word in ["auto", "carro", "vehiculo"]):
+            logger.info("🚗 Using car search fallback")
             return """
 ¡Perfecto! Te ayudo a encontrar tu auto ideal 🚗
 
@@ -176,9 +192,8 @@ Te puedo ayudar con:
 ¡Tengo excelentes opciones para ti! 😊
 """
 
-        elif any(
-            word in message_lower for word in ["precio", "financiamiento", "pago"]
-        ):
+        elif any(word in message_lower for word in ["precio", "financiamiento", "pago"]):
+            logger.info("💰 Using financing fallback")
             return """
 💰 ¡Claro! Te ayudo con el financiamiento.
 
@@ -190,8 +205,8 @@ En Kavak ofrecemos:
 
 ¿Cuál es el precio del auto que te interesa? Te calculo las mensualidades 📊
 """
-
         else:
+            logger.warning(f"⚠️ Using general error fallback for message: {message}")
             return SPANISH_ERROR_RESPONSES["general_error"]
 
 

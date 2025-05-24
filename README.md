@@ -1,267 +1,312 @@
-# 🚗 Kavak AI Sales Agent
+# Kavak AI Sales Agent
 
-Un agente comercial inteligente para Kavak México que opera via WhatsApp, capaz de recomendar autos, calcular financiamiento y responder preguntas sobre los servicios de Kavak.
+An intelligent sales agent for Kavak Mexico that operates via WhatsApp, capable of recommending cars, calculating financing, and answering questions about Kavak's services.
 
-## 🎯 Características
+## Technical Overview
 
-- **Búsqueda de Autos**: Búsqueda inteligente por presupuesto, marca y preferencias
-- **Calculadora de Financiamiento**: Planes de pago con tasa del 10% anual (3-6 años)
-- **Información de Kavak**: Garantías, proceso de compra y servicios
-- **Integración WhatsApp**: Chat en vivo via Twilio
-- **Procesamiento en Español**: Agente 100% en español mexicano
-- **Memoria Conversacional**: Mantiene contexto durante toda la conversación
+This project is built using:
 
-## 🚀 Inicio Rápido (5 minutos)
+- **FastAPI**: High-performance web framework for building APIs
+- **LangChain**: Framework for developing applications powered by language models
+- **OpenAI GPT-4o**: Advanced language model for natural language understanding and generation
+- **Twilio API**: For WhatsApp integration
+- **Pandas**: For data manipulation and analysis
+- **Docker**: Containerization for consistent development and deployment
 
-### Prerrequisitos
+## Disclaimer
+
+⚠️ **Important**: This is an independent project and is not affiliated with, endorsed by, or connected to Kavak in any way. It's a demonstration project only.
+
+## Features
+
+- **Car Search**: Intelligent search by budget, brand, and preferences
+- **Financing Calculator**: Payment plans with 10% annual rate (3-6 years)
+- **Kavak Information**: Warranties, purchase process, and services
+- **WhatsApp Integration**: Live chat via Twilio
+- **Spanish Processing**: 100% Mexican Spanish agent
+- **Conversational Memory**: Maintains context throughout the conversation
+
+## Quick Start (5 minutes)
+
+### Prerequisites
 - Python 3.11+
 - UV package manager
-- Cuenta de OpenAI (API key proporcionada)
-- Cuenta de Twilio (sandbox gratuito)
+- OpenAI API key
+- Twilio account (free sandbox)
 
-### Instalación
+### Quick Start Script
 
-1. **Clonar el repositorio**
+The project includes a `start.sh` script that will guide you through the setup process:
+
 ```bash
-cd /Users/ferdinandbracho/code/projects/kavak_challenge/commercial_agent
+# Make the script executable (first time only)
+chmod +x start.sh
+
+# Run the script
+./start.sh
 ```
 
-2. **Configuración inicial**
+This script will check for required dependencies and show you the next steps to configure and run the project.
+
+### Installation
+
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd commercial_agent
+```
+
+2. **Initial setup**
 ```bash
 make setup
 ```
 
-3. **Configurar variables de entorno**
-Editar `.env` con tus credenciales:
-```bash
-# API Keys
-OPENAI_API_KEY=tu_clave_openai_aqui
-TWILIO_ACCOUNT_SID=tu_twilio_sid
-TWILIO_AUTH_TOKEN=tu_twilio_token
+3. **Configure environment variables**
+   Copy the example environment file and update it with your credentials:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Then edit the `.env` file with your actual credentials. The file should contain the following variables:
+   ```bash
+   # API Keys
+   OPENAI_API_KEY=your_openai_key_here
+   TWILIO_ACCOUNT_SID=your_twilio_sid
+   TWILIO_AUTH_TOKEN=your_twilio_token
 
-# Opcional para webhooks locales
-NGROK_AUTHTOKEN=tu_ngrok_token
-```
+   # Optional for local webhooks
+   NGROK_AUTHTOKEN=your_ngrok_token
+   ```
 
-4. **Iniciar la aplicación**
+4. **Start the application**
 ```bash
 make dev
 ```
 
-¡Listo! 🎉 El agente estará disponible en `http://localhost:8000`
+All set! The agent will be available at `http://localhost:8000`
 
-## 📱 Uso y Demo
+## Usage and Demo
 
-### Conversaciones de Ejemplo
+### Example Conversations
 
 **Búsqueda de Auto:**
 ```
-Usuario: Hola, busco un auto usado
-Agente: ¡Hola! Soy tu agente comercial de Kavak 🚗 ¿Cuál es tu presupuesto?
-Usuario: Unos 300 mil pesos
-Agente: Perfecto, encontré 15 autos en tu rango...
+Usuario: Hola, estoy buscando un auto seminuevo
+Agente: ¡Hola! Soy tu asesor de ventas de Kavak. ¿Cuál es tu presupuesto?
+Usuario: Alrededor de $300,000 MXN
+Agente: ¡Perfecto! Tengo 15 opciones que podrían interesarte en ese rango de precio...
 ```
 
 **Cálculo de Financiamiento:**
 ```
-Usuario: ¿Cuánto pagaría mensualmente por un auto de 280mil?
-Agente: 💰 Plan de Financiamiento:
-Precio: $280,000
-Enganche (20%): $56,000  
-Pago mensual: $5,690 (4 años)
+Usuario: ¿Cuánto pagaría mensualmente por un auto de $280,000 MXN?
+Agente: Plan de Financiamiento:
+Precio: $280,000 MXN
+Enganche (20%): $56,000 MXN
+Pago mensual: $5,690 MXN (48 meses)
+Tasa de interés: 10% anual
 ```
 
-### Comandos de Demo
+### Demo Commands
 ```bash
-make demo         # Ejecutar escenarios de demostración
-make test-tools   # Probar herramientas individuales
-make logs         # Ver logs de la aplicación
+make demo         # Run demo scenarios
+make test-tools   # Test individual tools
+make logs         # View application logs
 ```
 
-## 🏗️ Arquitectura
+## Architecture
 
-### Componentes Principales
-- **FastAPI**: API principal y manejo de webhooks
-- **LangChain**: Orquestación del agente y herramientas
-- **OpenAI GPT-4o**: Modelo de lenguaje principal
-- **Pandas**: Procesamiento del catálogo de autos
-- **Twilio**: Integración con WhatsApp
+### Main Components
+- **FastAPI**: Main API and webhook handling
+- **LangChain**: Agent orchestration and tools
+- **OpenAI GPT-4o**: Main language model
+- **Pandas**: Car catalog processing
+- **Twilio**: WhatsApp integration
 
-### Flujo de Datos
+### Data Flow
 ```
-Usuario WhatsApp → Twilio → FastAPI → Agente AI → Herramientas → Respuesta → WhatsApp
-```
-
-### Herramientas del Agente
-1. **buscar_autos_por_presupuesto**: Búsqueda por rango de precio
-2. **buscar_auto_especifico**: Búsqueda por marca/modelo específico
-3. **calcular_financiamiento**: Cálculo de mensualidades
-4. **informacion_kavak**: Información de la empresa
-5. **agendar_cita**: Proceso de agendamiento
-6. **comparar_con_competencia**: Ventajas de Kavak
-
-## 📊 Datos
-
-El sistema utiliza `sample_caso_ai_engineer.csv` con 100 vehículos de muestra incluyendo:
-- Marca, modelo, año, versión
-- Precio, kilometraje, dimensiones  
-- Características (Bluetooth, CarPlay)
-
-## 🛠️ Desarrollo
-
-### Estructura del Proyecto
-```
-src/
-├── main.py              # Aplicación FastAPI principal
-├── config.py            # Configuración y settings
-├── agent/               # Lógica del agente de IA
-│   ├── kavak_agent.py   # Clase principal del agente
-│   └── prompts.py       # Prompts en español mexicano
-├── tools/               # Herramientas del agente
-│   ├── car_search.py    # Búsqueda de autos
-│   ├── financing.py     # Cálculos de financiamiento
-│   └── kavak_info.py    # Información de Kavak
-├── webhook/             # Integración WhatsApp
-│   └── twilio_handler.py # Manejo de webhooks de Twilio
-└── models/              # Modelos de datos
+WhatsApp User → Twilio → FastAPI → AI Agent → Tools → Response → WhatsApp
 ```
 
-### Comandos de Desarrollo
+### Agent Tools
+1. **search_cars_by_budget**: Search by price range
+2. **search_specific_car**: Search by specific make/model
+3. **calculate_financing**: Monthly payment calculations
+4. **kavak_information**: Company information
+5. **schedule_appointment**: Appointment scheduling
+6. **compare_with_competition**: Kavak advantages
+
+## Data
+
+The system uses `sample_caso_ai_engineer.csv` with 100 sample vehicles including:
+- Make, model, year, version
+- Price, mileage, dimensions
+- Features (Bluetooth, CarPlay)
+
+## Development
+
+### Project Structure
+```text
+.
+├── .github/              # GitHub workflows and templates
+├── data/                  # Data files and datasets
+│   └── sample_cars.csv    # Sample car inventory
+├── docs/                  # Documentation
+├── src/                   # Source code
+│   ├── agent/             # AI agent implementation
+│   │   ├── kavak_agent.py # Main agent class
+│   │   └── prompts.py     # System prompts and templates
+│   ├── models/            # Data models and schemas
+│   ├── services/          # Business logic services
+│   ├── tools/             # Agent tools
+│   │   ├── car_search.py  # Car search functionality
+│   │   ├── financing.py   # Payment calculations
+│   │   └── kavak_info.py  # Company information
+│   └── webhook/           # Webhook handlers
+│       └── twilio.py      # Twilio integration
+├── tests/                 # Test suite
+├── .env.example           # Environment variables template
+├── docker-compose.yml     # Docker Compose configuration
+├── Dockerfile             # Docker configuration
+├── Makefile               # Common tasks and commands
+├── pyproject.toml         # Project dependencies and metadata
+└── README.md              # This file
+```
+
+### Development Commands
 ```bash
-make install-deps    # Instalar/actualizar dependencias
-make format         # Formatear código con Black
-make lint           # Verificar calidad del código
-make test           # Ejecutar pruebas
-make clean          # Limpiar archivos temporales
+make install-deps    # Install/update dependencies
+make format         # Format code with Black
+make lint           # Run code quality checks
+make test           # Run tests
+make clean          # Clean temporary files
 ```
 
-### Agregar Nuevas Características
-1. Crear nueva herramienta en `src/tools/`
-2. Registrar herramienta en el agente
-3. Agregar pruebas en `tests/`
-4. Actualizar documentación
+### Adding New Features
+1. Create new tool in `src/tools/`
+2. Register tool with the agent
+3. Add tests in `tests/`
+4. Update documentation
 
-## 🧪 Pruebas
+## Testing
 
-### Ejecución de Pruebas
+### Running Tests
 ```bash
-make test           # Todas las pruebas
-make test-tools     # Solo herramientas
-make demo           # Escenarios de demostración
+make test           # Run all tests
+make test-tools     # Test tools only
+make demo           # Run demo scenarios
 ```
 
-### Prueba de Integración WhatsApp
-1. Configurar webhook de Twilio: `https://tu-ngrok-url.ngrok.io/webhook/whatsapp`
-2. Enviar mensaje a número sandbox de Twilio
-3. Verificar respuesta del agente
+### WhatsApp Integration Testing
+1. Configure Twilio webhook: `https://your-ngrok-url.ngrok.io/webhook/whatsapp`
+2. Send message to Twilio sandbox number
+3. Verify agent response
 
-## 🚀 Despliegue
+## Deployment
 
-### Desarrollo Local
+### Local Development
 ```bash
-make dev  # Servidor local con recarga automática
+make dev  # Local server with auto-reload
 ```
 
-### Producción (Docker)
+### Docker
 ```bash
-docker-compose --profile full up -d  # Con Redis y ChromaDB
+docker-compose --profile full up -d  # With Redis and ChromaDB
 ```
 
-### Servicios en la Nube
-- **API**: Railway, Render o AWS ECS
-- **Base de Datos**: Supabase PostgreSQL
-- **Cache**: Redis Cloud
-- **Frontend Demo**: Vercel
+## WhatsApp Setup
 
-## 🔧 Configuración de WhatsApp
+### 1. Set Up Twilio Sandbox
+1. Create account at [Twilio](https://console.twilio.com)
+2. Go to Messaging → Try it out → Send a WhatsApp message
+3. Send `join [sandbox-name]` to +1 415 523 8886
 
-### 1. Configurar Twilio Sandbox
-1. Crear cuenta en [Twilio](https://console.twilio.com)
-2. Ir a Messaging → Try it out → Send a WhatsApp message
-3. Enviar `join [sandbox-name]` a +1 415 523 8886
+### 2. Configure Webhook
+1. Start application: `make dev`
+2. Get public URL with ngrok
+3. In Twilio Console → WhatsApp Sandbox Settings
+4. Webhook URL: `https://your-ngrok-url.ngrok.io/webhook/whatsapp`
 
-### 2. Configurar Webhook
-1. Iniciar aplicación: `make dev`
-2. Obtener URL pública con ngrok
-3. En Twilio Console → WhatsApp Sandbox Settings
-4. Webhook URL: `https://tu-ngrok-url.ngrok.io/webhook/whatsapp`
+### 3. Test Integration
+Send a message to your Twilio sandbox number and verify the agent's response.
 
-### 3. Probar Integración
-Enviar mensaje a tu número sandbox de Twilio y recibir respuesta del agente.
+## Project Roadmap
 
-## 📈 Roadmap de Producción
+### Phase 1: Core Infrastructure
 
-### Fase 1: Infraestructura (Semanas 1-2)
-- Despliegue en la nube (AWS/GCP)
-- Base de datos de producción
-- Monitoreo y logging
-- Implementación de seguridad
+- **Cloud Deployment**: Container orchestration with AWS ECS/Fargate for scalable container management
+- **Database**: Integrate with PostgreSQL for connection pooling
+- **Monitoring & Observability**:
+  - Application monitoring with DataDog for metrics
+  - Error tracking with Sentry for real-time error reporting
+  - LLM-specific monitoring with LangSmith for prompt engineering and model performance
+  - Custom metrics for tracking token usage and response quality
+- **Security Layer**:
+  - API Gateway with rate limiting and authentication
+  - AWS Secrets Manager for secure credential management
+  - VPC configuration for network isolation
 
-### Fase 2: Escalabilidad (Semanas 3-4)
-- Balanceador de carga
-- Capas de cache
-- Limitación de API
-- Optimización de rendimiento
+### Phase 2: Performance & Scale
 
-### Fase 3: Características de Negocio (Semanas 5-8)
-- Integración con CRM
-- Calificación de leads
-- Agendamiento de citas
-- Análisis de ventas
+- **Caching Layer**: Implement Redis for frequent queries
+- **API Optimization**: Add response compression and caching headers
+- **Load Testing**: Identify and address performance bottlenecks
+- **Auto-scaling**: Configure horizontal scaling for high availability
 
-### Marco de Evaluación
-- **Precisión**: Recomendaciones correctas de autos (>85%)
-- **Tiempo de Respuesta**: <3 segundos promedio
-- **Conversión**: Tasa de demo a lead calificado
-- **Satisfacción**: Tasa de finalización de conversación
+### Phase 3: Advanced Features
 
-## 🤝 Contribución
+- **Analytics Dashboard**: User interaction metrics
+- **A/B Testing**: Test different agent responses
+- **Multi-language Support**: Expand beyond Spanish
+- **CI/CD Pipeline**: Automated testing and deployment
 
-### Proceso de Desarrollo
-1. Fork del repositorio
-2. Crear rama de característica
-3. Hacer cambios con pruebas
-4. Enviar pull request
+## Evaluation Framework
 
-### Estándares de Código
-- Python 3.11+ con type hints
-- Docstrings en español para lógica de negocio
-- Cobertura de pruebas >80%
-- Seguir convenciones de PEP 8
+### Code Quality
 
-## 📞 Soporte
+- **Testing**: Achieve >80% test coverage
+- **Type Safety**: Implement MyPy for static type checking
+- **Code Style**: Enforce consistent formatting with Ruff
+- **Documentation**: Maintain up-to-date API and inline docs
 
-Para problemas o preguntas:
-- Crear issue en GitHub
-- Revisar documentación en `/docs`
-- Consultar documentación de API en `/docs`
+### Performance
 
-## 🏆 Logros Técnicos
+- **Response Time**: <500ms for 95% of requests
+- **Error Rate**: <0.1% error rate in production
+- **Uptime**: 99.9% availability target
 
-### Arquitectura Moderna
-- Agente de IA con herramientas especializadas
-- Integración WhatsApp en tiempo real
-- Memoria conversacional persistente
-- Respuestas optimizadas para móvil
+### Security
 
-### Experiencia de Usuario
-- Conversaciones 100% en español mexicano
-- Manejo inteligente de errores tipográficos
-- Cálculos financieros precisos
-- Información actualizada de Kavak
+- **Authentication**: Implement API key rotation
+- **Data Protection**: Encrypt sensitive data at rest
+- **Compliance**: Follow OWASP security guidelines
 
-### Calidad de Desarrollo
-- Configuración reproducible con un comando
-- Pruebas automatizadas
-- Documentación completa
-- Código limpio y mantenible
+### Business Features
+- CRM Integration
+- Lead Scoring
+- Appointment Scheduling
+- Sales Analytics
 
-## 📄 Licencia
+## Contributing
 
-MIT License - ver archivo LICENSE para detalles
+### Development Process
+1. Fork the repository
+2. Create a feature branch
+3. Make changes with tests
+4. Submit a pull request
+
+### Code Standards
+- Python 3.11+ with type hints
+- Follow PEP 8 conventions
+
+## Support
+
+For issues or questions:
+- Create a GitHub issue
+- Check API documentation in `/docs`
+
+## License
+
+MIT License - see LICENSE file for details
 
 ---
-
-**Desarrollado con ❤️ para Kavak México 🇲🇽**
-
-*Este proyecto demuestra capacidades modernas de ingeniería de IA, incluyendo agentes conversacionales, integración de APIs, y desarrollo de software profesional.*

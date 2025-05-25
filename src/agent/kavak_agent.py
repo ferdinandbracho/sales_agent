@@ -87,7 +87,7 @@ class KavakSalesAgent:
             Respuesta del agente optimizada para WhatsApp
         """
         logger.info(f"🔍 Procesando mensaje: {message}")
-        
+
         try:
             # Build conversation history
             logger.info("📚 Construyendo historial de conversación...")
@@ -110,18 +110,23 @@ class KavakSalesAgent:
             # Optimize response for WhatsApp
             logger.info("✨ Optimizando respuesta para WhatsApp...")
             optimized_response = self._optimize_for_whatsapp(agent_response)
-            
-            logger.info(f"✅ Respuesta final: {optimized_response[:200]}..." if len(optimized_response) > 200 else f"✅ Respuesta final: {optimized_response}")
+
+            logger.info(
+                f"✅ Respuesta final: {optimized_response[:200]}..."
+                if len(optimized_response) > 200
+                else f"✅ Respuesta final: {optimized_response}"
+            )
             return optimized_response
 
         except Exception as e:
             logger.error(f"❌ Error procesando mensaje: {str(e)}", exc_info=True)
             logger.error(f"🔧 Tipo de error: {type(e).__name__}")
-            
+
             # Log the full error for debugging
             import traceback
+
             logger.error(f"📜 Stack trace: {traceback.format_exc()}")
-            
+
             fallback = self._get_fallback_response(message)
             logger.warning(f"🔄 Usando respuesta de respaldo: {fallback[:200]}...")
             return fallback

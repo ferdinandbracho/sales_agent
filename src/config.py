@@ -13,7 +13,9 @@ class LoggingSettings(BaseSettings):
     """Logging configuration settings"""
 
     LOG_LEVEL: str = "INFO"
-    LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s [%(filename)s:%(lineno)d]"
+    LOG_FORMAT: str = (
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s [%(filename)s:%(lineno)d]"
+    )
     LOG_FILE: str = "kavak_agent.log"
     LOG_DIR: str = "logs"
     MAX_BYTES: int = 10 * 1024 * 1024  # 10 MB

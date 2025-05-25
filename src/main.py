@@ -1,6 +1,5 @@
 """
 Kavak AI Sales Agent - Main FastAPI Application
-Agente comercial de IA para Kavak México
 """
 
 import os

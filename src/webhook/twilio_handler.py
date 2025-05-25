@@ -1,6 +1,5 @@
 """
 Twilio WhatsApp Webhook Handler
-Maneja mensajes de WhatsApp enviados por Twilio
 """
 
 import logging

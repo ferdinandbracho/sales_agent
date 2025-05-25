@@ -1,6 +1,5 @@
 """
-Financing Tool - Herramienta de cálculo de financiamiento
-Calcula planes de pago para autos con tasa del 10% anual
+Financing Tool
 """
 
 import math

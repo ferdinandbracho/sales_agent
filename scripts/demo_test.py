@@ -1,6 +1,5 @@
 """
 Demo Test Script for Kavak AI Agent
-Prueba conversaciones típicas del agente
 """
 
 import asyncio

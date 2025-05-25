@@ -1,6 +1,5 @@
 """
 Enhanced Kavak Knowledge Setup
-Configura la base de conocimiento completa con scraping y contenido de respaldo
 """
 
 import asyncio

@@ -1,7 +1,5 @@
 """
-Kavak Information Tool - Información sobre servicios y valor de Kavak
-Responde preguntas sobre la empresa, garantías, proceso de compra, etc.
-USA RAG con contenido scrapeado del sitio web
+Kavak Information Tool
 """
 
 from typing import Optional

@@ -1,6 +1,5 @@
 """
 Basic tests for Kavak AI Agent
-Pruebas básicas para el agente de IA de Kavak
 """
 
 import pytest

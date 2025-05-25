@@ -1,6 +1,5 @@
 """
 Kavak Website Scraper
-Extrae información del sitio web de Kavak para la base de conocimiento del agente
 """
 
 import requests

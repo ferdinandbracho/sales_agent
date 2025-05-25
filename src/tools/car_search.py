@@ -1,6 +1,5 @@
 """
-Car Search Tool - Herramienta de búsqueda de autos
-Busca autos en el catálogo de Kavak usando criterios específicos
+Car Search Tool
 """
 
 import os

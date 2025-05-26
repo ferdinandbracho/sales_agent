@@ -164,6 +164,8 @@ make logs         # View application logs
 - **OpenAI GPT-4o**: Main language model
 - **Pandas**: Car catalog processing
 - **Twilio**: WhatsApp integration
+- **ChromaDB**: Vector database for RAG (with dynamic fallback to base knowledge)
+- **Redis**: Conversation memory storage
 
 ### Data Flow
 ```

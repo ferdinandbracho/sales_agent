@@ -35,7 +35,7 @@ async def lifespan(app_instance: FastAPI):
     # Startup: Initialize Kavak Knowledge Base
     logger.info("Application startup: Initializing Kavak Knowledge Base...")
     initialize_global_kavak_kb()
-    logger.info("Application startup: Kavak Knowledge Base initialization process triggered.")
+    logger.info("Application startup in progress...")
     yield
     # Shutdown (if any cleanup needed in the future)
     logger.info("Application shutdown.")

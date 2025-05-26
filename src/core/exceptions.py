@@ -2,8 +2,8 @@
 Custom exception handlers for the API.
 """
 
-from uuid import uuid4
 from typing import Any, Dict
+from uuid import uuid4
 
 from fastapi import Request, status
 from fastapi.responses import JSONResponse

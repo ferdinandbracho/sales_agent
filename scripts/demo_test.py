@@ -1,6 +1,5 @@
 """
 Demo Test Script for Kavak AI Agent
-Prueba conversaciones típicas del agente
 """
 
 import asyncio
@@ -136,9 +135,10 @@ async def main():
         print("\n\n✅ DEMO COMPLETED SUCCESSFULLY!")
         print("=" * 60)
         print("🎯 Next steps:")
-        print("1. Run 'make dev' to start the API server")
-        print("2. Test WhatsApp integration with Twilio")
-        print("3. Configure ngrok for webhook testing")
+        print("1. Configure ngrok to expose your local server")
+        print("2. Set up Twilio webhook with your ngrok URL")
+        print("3. Run 'make dev' to start the API server")
+        print("4. Test WhatsApp integration with Twilio")
 
     except Exception as e:
         print(f"\n❌ DEMO FAILED: {e}")

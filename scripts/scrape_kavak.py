@@ -1,13 +1,11 @@
 """
 Kavak Website Scraper
-Extrae información del sitio web de Kavak para la base de conocimiento del agente
 """
 
 import requests
 from bs4 import BeautifulSoup
 import json
 import time
-from urllib.parse import urljoin, urlparse
 from typing import Dict, List, Optional
 import logging
 import os
@@ -43,28 +41,28 @@ class KavakWebScraper:
             "https://www.kavak.com/mx/blog/sedes-de-kavak-en-mexico",  # Provided URL
         ]
 
-        logger.info("🌐 Starting Kavak website scraping...")
+        logger.info("Starting Kavak website scraping...")
 
         for url in urls_to_scrape:
             try:
-                logger.info(f"📄 Scraping: {url}")
+                logger.info(f"Scraping: {url}")
                 content = self.scrape_single_page(url)
                 if content:
                     self.scraped_content.append(content)
-                    logger.info(f"✅ Successfully scraped: {content['title'][:50]}...")
+                    logger.info(f"Successfully scraped: {content['title'][:50]}...")
                 else:
-                    logger.warning(f"⚠️ No content extracted from: {url}")
+                    logger.warning(f"No content extracted from: {url}")
 
                 # Be respectful to the server
                 time.sleep(2)
 
             except Exception as e:
-                logger.error(f"❌ Error scraping {url}: {e}")
+                logger.error(f"Error scraping {url}: {e}")
                 # Continue with other URLs even if one fails
                 continue
 
         logger.info(
-            f"🎉 Scraping completed. Extracted content from {len(self.scraped_content)} pages"
+            f"Scraping completed. Extracted content from {len(self.scraped_content)} pages"
         )
         return self.scraped_content
 
@@ -211,88 +209,10 @@ class KavakWebScraper:
             with open(filename, "w", encoding="utf-8") as f:
                 json.dump(self.scraped_content, f, ensure_ascii=False, indent=2)
 
-            logger.info(f"💾 Saved {len(self.scraped_content)} pages to {filename}")
+            logger.info(f"Saved {len(self.scraped_content)} pages to {filename}")
 
         except Exception as e:
-            logger.error(f"❌ Error saving content: {e}")
-
-    def create_fallback_content(self) -> List[Dict]:
-        """
-        Create fallback content if scraping fails
-        Based on known Kavak information
-        """
-        logger.info("📋 Creating fallback Kavak knowledge base...")
-
-        fallback_content = [
-            {
-                "url": "fallback://kavak-value-proposition",
-                "title": "Propuesta de Valor de Kavak",
-                "main_content": """
-                Kavak es la plataforma líder de autos seminuevos en México y Latinoamérica. 
-                Ofrecemos una experiencia de compra 100% digital con garantía real y 
-                financiamiento accesible. Nuestro proceso incluye inspección de 240 puntos, 
-                garantía de 3 meses o 3,000 km, y financiamiento hasta 84 meses.
-                """,
-                "headings": [
-                    "Kavak - Plataforma Líder de Autos Seminuevos",
-                    "Garantía Real",
-                    "Financiamiento Accesible",
-                    "Proceso 100% Digital",
-                ],
-                "paragraphs": [
-                    "Kavak revoluciona la compra y venta de autos seminuevos en México.",
-                    "Ofrecemos garantía de 3 meses o 3,000 kilómetros en todos nuestros vehículos.",
-                    "Financiamiento disponible hasta 84 meses con tasas competitivas.",
-                    "Proceso completamente digital desde la búsqueda hasta la entrega.",
-                ],
-                "metadata": {"source": "fallback", "category": "value_proposition"},
-            },
-            {
-                "url": "fallback://kavak-locations",
-                "title": "Sedes de Kavak en México",
-                "main_content": """
-                Kavak cuenta con presencia en las principales ciudades de México incluyendo
-                Ciudad de México, Guadalajara, Monterrey, Puebla, Tijuana y Mérida.
-                Ofrecemos entrega a domicilio y servicio de prueba de manejo.
-                """,
-                "headings": [
-                    "Ubicaciones Kavak en México",
-                    "Ciudad de México",
-                    "Guadalajara",
-                    "Monterrey",
-                ],
-                "paragraphs": [
-                    "Kavak tiene presencia en las principales ciudades mexicanas.",
-                    "Multiple ubicaciones en Ciudad de México para mayor conveniencia.",
-                    "Servicio de entrega a domicilio disponible.",
-                    "Pruebas de manejo programadas en ubicación del cliente.",
-                ],
-                "metadata": {"source": "fallback", "category": "locations"},
-            },
-            {
-                "url": "fallback://kavak-warranty",
-                "title": "Garantía Kavak",
-                "main_content": """
-                Todos los autos Kavak incluyen garantía de 3 meses o 3,000 kilómetros.
-                Cobertura incluye motor, transmisión, sistema eléctrico, frenos y aire acondicionado.
-                Somos la única plataforma que ofrece garantía real en autos seminuevos.
-                """,
-                "headings": [
-                    "Garantía de 3 Meses o 3,000 KM",
-                    "Cobertura Completa",
-                    "Única en el Mercado",
-                ],
-                "paragraphs": [
-                    "Garantía de 3 meses o 3,000 kilómetros lo que ocurra primero.",
-                    "Cobertura de motor, transmisión, sistema eléctrico y frenos.",
-                    "Somos la única plataforma con garantía real en seminuevos.",
-                    "Red de talleres autorizados en todo México.",
-                ],
-                "metadata": {"source": "fallback", "category": "warranty"},
-            },
-        ]
-
-        return fallback_content
+            logger.error(f"Error saving content: {e}")
 
 
 def main():
@@ -302,13 +222,6 @@ def main():
     try:
         # Attempt to scrape live content
         content = scraper.scrape_kavak_knowledge()
-
-        # If scraping failed or returned minimal content, use fallback
-        if len(content) < 2:
-            logger.warning("⚠️ Limited content scraped, adding fallback content...")
-            fallback_content = scraper.create_fallback_content()
-            content.extend(fallback_content)
-            scraper.scraped_content = content
 
         # Save the content
         scraper.save_content()
@@ -322,22 +235,20 @@ def main():
             print(f"   Content length: {len(item['main_content'])} characters")
             print()
 
-        print(
-            f"🎉 Successfully created Kavak knowledge base with {len(content)} entries!"
-        )
-        print("💾 Content saved to: data/kavak_knowledge.json")
+        print(f"Successfully created Kavak knowledge base with {len(content)} entries!")
+        print("Content saved to: data/kavak_knowledge.json")
 
     except Exception as e:
-        logger.error(f"❌ Scraping failed: {e}")
+        logger.error(f"Scraping failed: {e}")
 
         # Create fallback content as last resort
-        logger.info("🔄 Creating fallback knowledge base...")
+        logger.info("Creating fallback knowledge base...")
         fallback_content = scraper.create_fallback_content()
         scraper.scraped_content = fallback_content
         scraper.save_content()
 
-        print("⚠️ Used fallback content due to scraping issues")
-        print("💾 Fallback knowledge base saved to: data/kavak_knowledge.json")
+        print("Used fallback content due to scraping issues")
+        print("Fallback knowledge base saved to: data/kavak_knowledge.json")
 
 
 if __name__ == "__main__":

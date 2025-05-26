@@ -1,7 +1,7 @@
 """
 Kavak AI Sales Agent - Main FastAPI Application
-Agente comercial de IA para Kavak México
 """
+
 import os
 
 import uvicorn
@@ -9,14 +9,14 @@ from fastapi import FastAPI, status
 
 # Import configuration and core components first
 from src.core.exceptions import setup_exception_handlers
+
+# Initialize logging
+from src.core.logging import get_logger, setup_logging
 from src.core.middleware import setup_middleware
+from src.schemas.responses import HealthCheckResponse, HealthStatus, RootResponse
 
 # Import routes and schemas
 from src.webhook.twilio_handler import router as webhook_router
-from src.schemas.responses import HealthCheckResponse, RootResponse, HealthStatus
-
-# Initialize logging
-from src.core.logging import setup_logging, get_logger
 
 # Configure logging using settings from config
 setup_logging()
@@ -49,6 +49,7 @@ app = FastAPI(
 app = setup_middleware(app)
 app = setup_exception_handlers(app)
 
+
 # --- Routes ---
 @app.get(
     "/",
@@ -68,13 +69,13 @@ app = setup_exception_handlers(app)
                             "health": "/health",
                             "docs": "/docs",
                             "webhook": "/webhook/whatsapp",
-                        }
+                        },
                     }
                 }
-            }
+            },
         }
     },
-    tags=["Root"]
+    tags=["Root"],
 )
 async def root() -> RootResponse:
     """
@@ -89,6 +90,7 @@ async def root() -> RootResponse:
             "webhook": "/webhook/whatsapp",
         },
     )
+
 
 @app.get(
     "/health",
@@ -106,12 +108,12 @@ async def root() -> RootResponse:
                         "status": "OK",
                         "service": "Kavak AI Agent",
                         "version": "0.1.0",
-                        "language": "es_MX"
+                        "language": "es_MX",
                     }
                 }
             },
         }
-    }
+    },
 )
 async def health_check() -> HealthCheckResponse:
     """
@@ -123,6 +125,7 @@ async def health_check() -> HealthCheckResponse:
         version="0.1.0",
         language="es_MX",
     )
+
 
 # Include webhook routes
 app.include_router(
@@ -144,5 +147,5 @@ if __name__ == "__main__":
         port=port,
         reload=True,
         log_level="info",
-        #proxy_headers=True, # Only for production
+        # proxy_headers=True, # Only for production
     )

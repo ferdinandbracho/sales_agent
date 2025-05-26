@@ -1,6 +1,5 @@
 """
-Car Search Tool - Herramienta de búsqueda de autos
-Busca autos en el catálogo de Kavak usando criterios específicos
+Car Search Tool
 """
 
 import os
@@ -39,7 +38,6 @@ def load_car_data() -> pd.DataFrame:
 def buscar_autos_por_presupuesto(
     presupuesto_maximo: float,
     marca: Optional[str] = None,
-    tipo_auto: Optional[str] = None,
 ) -> str:
     """
     Busca autos en el catálogo según el presupuesto máximo del cliente.
@@ -47,7 +45,6 @@ def buscar_autos_por_presupuesto(
     Args:
         presupuesto_maximo: Presupuesto máximo en pesos mexicanos
         marca: Marca específica (opcional) - ej: Toyota, Nissan, Ford
-        tipo_auto: Tipo de auto (opcional) - ej: sedan, SUV, hatchback
 
     Returns:
         Lista formateada de autos disponibles en español

@@ -11,7 +11,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 from src.tools.car_search import buscar_autos_por_presupuesto, buscar_auto_especifico
 from src.tools.financing import calcular_financiamiento, calcular_multiples_opciones
-from src.tools.kavak_info import informacion_kavak
+from src.tools.kavak_info import get_kavak_info
 
 
 async def demo_car_search():
@@ -64,17 +64,17 @@ async def demo_kavak_info():
 
     # Test 1: General info
     print("\n1. Información general sobre Kavak")
-    result = informacion_kavak.invoke({"pregunta": "¿Qué es Kavak?"})
+    result = get_kavak_info.invoke({"pregunta": "¿Qué es Kavak?"})
     print(result)
 
     # Test 2: Warranty info
     print("\n2. Información sobre garantías")
-    result = informacion_kavak.invoke({"pregunta": "garantía"})
+    result = get_kavak_info.invoke({"pregunta": "garantía"})
     print(result)
 
     # Test 3: Financing info
     print("\n3. Información sobre financiamiento")
-    result = informacion_kavak.invoke({"pregunta": "financiamiento"})
+    result = get_kavak_info.invoke({"pregunta": "financiamiento"})
     print(result)
 
 
@@ -111,7 +111,7 @@ async def demo_conversation_flow():
             )
             print(f"   Agente: {result[:200]}...")
         elif "financiamiento" in message.lower():
-            result = informacion_kavak.invoke({"pregunta": "financiamiento"})
+            result = get_kavak_info.invoke({"pregunta": "financiamiento"})
             print(f"   Agente: {result[:200]}...")
         elif "calcular" in message.lower():
             result = calcular_financiamiento.invoke(

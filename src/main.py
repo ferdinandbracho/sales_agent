@@ -3,6 +3,7 @@ Kavak AI Sales Agent - Main FastAPI Application
 """
 
 import os
+from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI, status
@@ -18,12 +19,26 @@ from src.schemas.responses import HealthCheckResponse, HealthStatus, RootRespons
 # Import routes and schemas
 from src.webhook.twilio_handler import router as webhook_router
 
+# Import knowledge base initializer
+from src.knowledge.kavak_knowledge import initialize_global_kavak_kb
+
 # Configure logging using settings from config
 setup_logging()
 
 # Get logger for this module
 logger = get_logger(__name__)
 logger.info("Starting application...")
+
+# Lifespan Management
+@asynccontextmanager
+async def lifespan(app_instance: FastAPI):
+    # Startup: Initialize Kavak Knowledge Base
+    logger.info("Application startup: Initializing Kavak Knowledge Base...")
+    initialize_global_kavak_kb()
+    logger.info("Application startup: Kavak Knowledge Base initialization process triggered.")
+    yield
+    # Shutdown (if any cleanup needed in the future)
+    logger.info("Application shutdown.")
 
 # Create FastAPI app
 app = FastAPI(
@@ -43,6 +58,7 @@ app = FastAPI(
             "description": "Endpoints for monitoring and service status",
         },
     ],
+    lifespan=lifespan
 )
 
 # Setup middlewares and exception handlers
@@ -50,7 +66,7 @@ app = setup_middleware(app)
 app = setup_exception_handlers(app)
 
 
-# --- Routes ---
+# Routes
 @app.get(
     "/",
     response_model=RootResponse,
@@ -147,5 +163,4 @@ if __name__ == "__main__":
         port=port,
         reload=True,
         log_level="info",
-        # proxy_headers=True, # Only for production
     )

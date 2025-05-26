@@ -13,7 +13,7 @@ from .financing import (
     calcular_multiples_opciones,
     calcular_presupuesto_por_mensualidad,
 )
-from .kavak_info import agendar_cita, comparar_con_competencia, informacion_kavak
+from .kavak_info import schedule_appointment, get_kavak_info
 
 __all__ = [
     # Car search tools
@@ -25,7 +25,6 @@ __all__ = [
     "calcular_multiples_opciones",
     "calcular_presupuesto_por_mensualidad",
     # Kavak info tools
-    "informacion_kavak",
-    "agendar_cita",
-    "comparar_con_competencia",
+    "get_kavak_info",
+    "schedule_appointment",
 ]

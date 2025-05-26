@@ -21,9 +21,8 @@ from src.tools.financing import (
     calcular_presupuesto_por_mensualidad,
 )
 from src.tools.kavak_info import (
-    agendar_cita,
-    comparar_con_competencia,
-    informacion_kavak,
+    schedule_appointment,
+    get_kavak_info,
 )
 
 # Configure logging
@@ -47,9 +46,8 @@ def get_kavak_agent():
         calcular_multiples_opciones,
         calcular_presupuesto_por_mensualidad,
         # Kavak information tools
-        informacion_kavak,
-        agendar_cita,
-        comparar_con_competencia,
+        get_kavak_info,
+        schedule_appointment,
     ]
 
     return create_kavak_agent(tools)
@@ -98,26 +96,54 @@ async def whatsapp_webhook(
         conversation_history.append(
             {"user": Body, "agent": agent_response, "timestamp": MessageSid}
         )
-
-        # Keep only last 10 turns to manage memory
         conversation_memory[session_id] = conversation_history[-10:]
 
         # Create TwiML response
         twiml_response = MessagingResponse()
-        twiml_response.message(agent_response)
 
-        logger.info(f"📤 Sending response: {agent_response[:100]}...")
+        # Split response if too long (WhatsApp limit is 4096 chars per message)
+        max_length = 3000  # Conservative limit to account for TwiML overhead
+        if len(agent_response) > max_length:
+            chunks = [
+                agent_response[i : i + max_length]
+                for i in range(0, len(agent_response), max_length)
+            ]
+            for chunk in chunks:
+                twiml_response.message(chunk)
+                logger.info(f"📤 Sending chunk: {chunk[:100]}...")
+        else:
+            twiml_response.message(agent_response)
+            logger.info(f"📤 Sending response: {agent_response[:100]}...")
 
-        return Response(content=str(twiml_response), media_type="application/xml")
+        # Convert to string and log the raw TwiML for debugging
+        twiml_str = str(twiml_response)
+        logger.debug(f"📝 Raw TwiML response: {twiml_str}")
+
+        # Return response with proper headers
+        return Response(
+            content=twiml_str,
+            media_type="application/xml",
+            headers={"X-Twilio-Webhook": "true"},
+        )
 
     except Exception as e:
-        logger.error(f"❌ Error processing WhatsApp message: {e}")
+        logger.error(f"❌ Error processing WhatsApp message: {str(e)}", exc_info=True)
 
-        # Send error response to user
+        # Create a simple error response
         error_response = MessagingResponse()
-        error_response.message(SPANISH_ERROR_RESPONSES["general_error"])
+        error_message = (
+            "¡Ups! Algo salió mal. Por favor, inténtalo de nuevo en un momento. 🛠️"
+        )
+        error_response.message(error_message)
 
-        return Response(content=str(error_response), media_type="application/xml")
+        logger.error(f"⚠️ Sending error response: {error_message}")
+
+        return Response(
+            content=str(error_response),
+            media_type="application/xml",
+            status_code=200,
+            headers={"X-Twilio-Webhook": "true"},
+        )
 
 
 async def process_with_kavak_agent(
@@ -172,45 +198,46 @@ async def process_with_kavak_agent(
         if any(word in message_lower for word in ["hola", "hello", "hi", "buenas"]):
             logger.info("👋 Using greeting fallback")
             return """
-¡Hola! Soy tu agente comercial de Kavak 🚗
+            ¡Hola! Soy tu agente comercial de Kavak 🚗
 
-Te puedo ayudar con:
-• Encontrar tu auto ideal
-• Calcular financiamiento 💰
-• Info sobre garantías ✅  
-• Agendar cita de prueba 📅
+            Te puedo ayudar con:
+            • Encontrar tu auto ideal
+            • Calcular financiamiento 💰
+            • Info sobre garantías ✅  
+            • Agendar cita de prueba 📅
 
-¿Qué tipo de auto buscas?
-"""
+            ¿Qué tipo de auto buscas?
+            """
 
         elif any(word in message_lower for word in ["auto", "carro", "vehiculo"]):
             logger.info("🚗 Using car search fallback")
             return """
-¡Perfecto! Te ayudo a encontrar tu auto ideal 🚗
+            ¡Perfecto! Te ayudo a encontrar tu auto ideal 🚗
 
-¿Me puedes decir:
-• ¿Cuál es tu presupuesto aproximado?
-• ¿Tienes alguna marca de preferencia?
-• ¿Para qué lo vas a usar principalmente?
+            ¿Me puedes decir:
+            • ¿Cuál es tu presupuesto aproximado?
+            • ¿Tienes alguna marca de preferencia?
+            • ¿Para qué lo vas a usar principalmente?
 
-¡Tengo excelentes opciones para ti! 😊
-"""
+            ¡Tengo excelentes opciones para ti! 😊
+            """
 
         elif any(
             word in message_lower for word in ["precio", "financiamiento", "pago"]
         ):
             logger.info("💰 Using financing fallback")
             return """
-💰 ¡Claro! Te ayudo con el financiamiento.
+            💰 ¡Claro! Te ayudo con el financiamiento.
 
-En Kavak ofrecemos:
-• Financiamiento hasta 84 meses
-• Tasa desde 10% anual
-• Aprobación en 24 horas
-• Sin aval ni garantías adicionales
+            En Kavak ofrecemos:
+            • Financiamiento hasta 84 meses
+            • Tasa desde 10% anual
+            • Aprobación en 24 horas
+            • Sin aval ni garantías adicionales
 
-¿Cuál es el precio del auto que te interesa? Te calculo las mensualidades 📊
-"""
+            ¿Cuál es el precio del auto que te interesa? Te calculo las mensualidades 📊
+            """
+
         else:
             logger.warning(f"⚠️ Using general error fallback for message: {message}")
             return SPANISH_ERROR_RESPONSES["general_error"]

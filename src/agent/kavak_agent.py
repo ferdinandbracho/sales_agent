@@ -1,6 +1,5 @@
 """
 Kavak AI Sales Agent - Core Agent Implementation
-Agente comercial principal de Kavak México
 """
 
 import logging
@@ -91,25 +90,76 @@ class KavakSalesAgent:
         try:
             # Build conversation history
             logger.info("📚 Construyendo historial de conversación...")
-            chat_history = self._build_chat_history(conversation_history)
-            logger.debug(f"📜 Historial de conversación: {chat_history}")
+            chat_history_for_agent = self._build_chat_history(conversation_history)
+            logger.debug(
+                f"📜 Historial de conversación para agente: {chat_history_for_agent}"
+            )
 
             # Process with agent
-            logger.info("🤖 Invocando al agente...")
-            response = await self.agent_executor.ainvoke(
-                {"input": message, "chat_history": chat_history}
+            logger.info("🤖 Invocando al agente principal...")
+            agent_executor_response = await self.agent_executor.ainvoke(
+                {"input": message, "chat_history": chat_history_for_agent}
             )
-            logger.debug(f"📦 Respuesta cruda del agente: {response}")
+            logger.debug(f"📦 Respuesta cruda del agente: {agent_executor_response}")
 
-            # Extract and validate response
-            agent_response = response.get("output", "")
-            if not agent_response or not agent_response.strip():
-                logger.error("❌ El agente devolvió una respuesta vacía")
+            agent_final_output = agent_executor_response.get("output", "")
+
+            # Check if RAG tool (get_kavak_info) was called and returned empty,
+            # and if the agent's final output is also empty.
+            rag_tool_returned_empty = False
+            if agent_executor_response.get("intermediate_steps"):
+                for action, observation in agent_executor_response[
+                    "intermediate_steps"
+                ]:
+                    if (
+                        hasattr(action, "tool")
+                        and action.tool == "get_kavak_info"
+                        and observation == ""
+                    ):
+                        logger.info(
+                            "🛠️ Herramienta 'get_kavak_info' fue llamada y no devolvió resultados específicos (RAG). "
+                        )
+                        rag_tool_returned_empty = True
+                        break
+
+            if rag_tool_returned_empty and (
+                not agent_final_output or not agent_final_output.strip()
+            ):
+                logger.warning(
+                    "RAG no encontró información específica y el agente generó una respuesta vacía. "
+                    "Intentando respuesta directa con LLM y prompt de sistema."
+                )
+
+                # Construct a simpler prompt for direct LLM call
+                direct_llm_messages = [
+                    ("system", KAVAK_SYSTEM_PROMPT),
+                    ("system", MEXICAN_SALES_PERSONA),
+                ]
+                # chat_history_for_agent is already List[BaseMessage]
+                direct_llm_messages.extend(chat_history_for_agent)
+                direct_llm_messages.append(HumanMessage(content=message))
+
+                simple_prompt = ChatPromptTemplate.from_messages(direct_llm_messages)
+
+                # Directly invoke the LLM
+                llm_response_obj = await self.llm.ainvoke(simple_prompt)
+                agent_final_output = (
+                    llm_response_obj.content if llm_response_obj else ""
+                )
+                logger.info(
+                    f"💬 Respuesta directa del LLM (fallback RAG): {agent_final_output[:100]}..."
+                )
+
+            # Validate final response (either from agent or direct LLM call)
+            if not agent_final_output or not agent_final_output.strip():
+                logger.error(
+                    "❌ El agente (o el LLM de respaldo) devolvió una respuesta vacía."
+                )
                 return SPANISH_ERROR_RESPONSES["empty_response"]
 
             # Optimize response for WhatsApp
             logger.info("✨ Optimizando respuesta para WhatsApp...")
-            optimized_response = self._optimize_for_whatsapp(agent_response)
+            optimized_response = self._optimize_for_whatsapp(agent_final_output)
 
             logger.info(
                 f"✅ Respuesta final: {optimized_response[:200]}..."

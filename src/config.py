@@ -54,7 +54,9 @@ class ChromaDBSettings(BaseSettings):
 
     CHROMA_HOST: str = "localhost"
     CHROMA_PORT: int = 8001
-    CHROMA_PERSIST_DIRECTORY: str = "./chroma_data"
+    CHROMA_PERSIST_DIRECTORY: str = "data/chroma_db"
+    CHROMA_COLLECTION_NAME: str = "kavak_documents"
+    EMBEDDING_MODEL_NAME: str = "all-MiniLM-L6-v2"
 
 
 class Settings(BaseSettings):
@@ -82,7 +84,7 @@ class Settings(BaseSettings):
     # Mexican Market Configuration
     CURRENCY: str = "MXN"
     CURRENCY_SYMBOL: str = "$"
-    DEFAULT_INTEREST_RATE: float = 0.10  # 10% as specified in requirements
+    DEFAULT_INTEREST_RATE: float = 0.10
     FINANCING_YEARS_OPTIONS: list = [3, 4, 5, 6]
 
     model_config = SettingsConfigDict(
@@ -90,7 +92,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
-        env_nested_delimiter="__",  # Allows nested settings with __
+        env_nested_delimiter="__",
     )
 
     @property

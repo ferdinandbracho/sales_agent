@@ -24,10 +24,10 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      - ./chroma_data:/chroma
+      - /data  # Volumen anónimo para datos temporales
     environment:
       - CHROMA_SERVER_HOST=0.0.0.0
-      - PERSIST_DIRECTORY=/chroma
+      - PERSIST_DIRECTORY=/data
     healthcheck:
       test: [ "CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000" ]
       interval: 30s
@@ -37,22 +37,26 @@ services:
     networks:
       - kavak-network
 
-  # Main Kavak AI Agent API
+  # Main Kavak AI Agent API (Development with Debugging)
   kavak-api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: kavak-api
     ports:
       - "8000:8000"
+      - "5678:5678"  # Debug port
     environment:
       - ENVIRONMENT=development
       - REDIS_URL=redis://redis:6379/0
       - CHROMA_HOST=chromadb
-      - CHROMA_PORT=8001
+      - CHROMA_PORT=8000
       - CHROMA_PERSIST_DIRECTORY=/app/data/chroma
+      - PYTHONPATH=/app/src
+      - PYTHONUNBUFFERED=1
+      - PYTHONBREAKPOINT=debugpy.breakpoint
     volumes:
-      - ./src:/app/src:ro  # Mount source for development
+      - ./src:/app/src  # Mount source for development (not read-only)
       - ./data:/app/data
     depends_on:
       redis:
@@ -62,8 +66,10 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    command: >
-      sh -c "uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
+    cap_add:
+      - SYS_PTRACE  # Required for debugging
+    security_opt:
+      - seccomp:unconfined  # Required for debugging
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -71,6 +77,8 @@ services:
       retries: 3
     networks:
       - kavak-network
+    profiles:
+      - dev
 
   # ngrok for webhook tunneling (development only)
   ngrok:
@@ -127,12 +135,6 @@ services:
 
 volumes:
   redis_data:
-  chroma_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./chroma_data
 
 networks:
   kavak-network:

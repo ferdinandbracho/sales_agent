@@ -6,7 +6,7 @@ import pytest
 
 from src.tools.car_search import buscar_autos_por_presupuesto, buscar_auto_especifico
 from src.tools.financing import calcular_financiamiento
-from src.tools.kavak_info import informacion_kavak
+from src.tools.kavak_info import get_kavak_info
 
 
 class TestCarSearch:
@@ -63,19 +63,19 @@ class TestKavakInfo:
 
     def test_informacion_kavak_garantia(self):
         """Test warranty information"""
-        result = informacion_kavak.invoke({"pregunta": "garantía"})
+        result = get_kavak_info.invoke({"pregunta": "garantía"})
         assert "Garantía" in result
         assert "3 meses" in result or "3,000 km" in result
 
     def test_informacion_kavak_financiamiento(self):
         """Test financing information"""
-        result = informacion_kavak.invoke({"pregunta": "financiamiento"})
+        result = get_kavak_info.invoke({"pregunta": "financiamiento"})
         assert "Financiamiento" in result
         assert "10%" in result
 
     def test_informacion_kavak_general(self):
         """Test general information"""
-        result = informacion_kavak.invoke({"pregunta": "¿Qué es Kavak?"})
+        result = get_kavak_info.invoke({"pregunta": "¿Qué es Kavak?"})
         assert "Kavak" in result
         assert "🚗" in result
 
@@ -107,7 +107,7 @@ class TestSpanishResponses:
 
     def test_no_english_responses(self):
         """Ensure no English in user-facing responses"""
-        result = informacion_kavak.invoke({"pregunta": "warranty"})
+        result = get_kavak_info.invoke({"pregunta": "warranty"})
         # Should not contain common English words
         english_words = ["warranty", "financing", "car", "price", "payment"]
         assert not any(word.lower() in result.lower() for word in english_words)

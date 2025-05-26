@@ -61,7 +61,7 @@ test-tools: ## Test individual agent tools
 	@echo "\n💰 Testing financing tool..."
 	uv run python -c "from src.tools.financing import calcular_financiamiento; print(calcular_financiamiento.invoke({'precio_auto': 250000, 'enganche': 50000, 'anos': 4}))"
 	@echo "\nℹ️  Testing Kavak info tool..."
-	uv run python -c "from src.tools.kavak_info import informacion_kavak; print(informacion_kavak.invoke({'pregunta': 'garantía'}))"
+	uv run python -c "from src.tools.kavak_info import get_kavak_info; print(get_kavak_info.invoke({'pregunta': 'garantía'}))"
 
 demo: ## Run demo conversation scenarios
 	@echo "🎭 Running demo scenarios..."

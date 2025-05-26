@@ -1,321 +1,94 @@
 """
 Kavak Information Tool
-"""
 
-from typing import Optional
+This module provides tools to retrieve and format information about Kavak's services,
+warranties, and value proposition in Mexican Spanish.
+"""
 
 from langchain.tools import tool
-
-from ..config import MEXICAN_CONFIG
+from ..config import settings
 from ..knowledge.kavak_knowledge import get_kavak_knowledge_base
+import logging
 
-# Kavak knowledge base (based on provided URL and general knowledge)
-KAVAK_INFO = {
-    "valor_propuesta": {
-        "titulo": "Propuesta de Valor de Kavak",
-        "descripcion": "Kavak es la plataforma líder de autos seminuevos en México y Latinoamérica",
-        "beneficios": [
-            "Garantía de 3 meses o 3,000 km (lo que ocurra primero)",
-            "Financiamiento hasta 84 meses con tasas competitivas",
-            "Proceso 100% digital desde casa",
-            "Inspección de 240 puntos de calidad",
-            "Intercambio garantizado",
-            "Servicio postventa especializado",
-        ],
-    },
-    "garantia": {
-        "cobertura": "3 meses o 3,000 kilómetros",
-        "incluye": [
-            "Motor y transmisión",
-            "Sistema eléctrico",
-            "Frenos y suspensión",
-            "Aire acondicionado",
-            "Reparaciones mecánicas mayores",
-        ],
-        "exclusiones": "Desgaste normal, neumáticos, filtros, aceites",
-    },
-    "proceso": {
-        "pasos": [
-            "Busca tu auto ideal en kavak.com",
-            "Agenda cita para verlo y probarlo",
-            "Solicita financiamiento si lo necesitas",
-            "Completa la compra 100% digital",
-            "Recibe tu auto con garantía",
-        ]
-    },
-    "financiamiento": {
-        "opciones": [
-            "Desde 12 hasta 84 meses",
-            "Tasa desde 10% anual",
-            "Aprobación en 24 horas",
-            "Sin aval ni garantías adicionales",
-            "Pago anticipado sin penalización",
-        ]
-    },
-    "ubicaciones": {
-        "principales": [
-            "Ciudad de México (múltiples sucursales)",
-            "Guadalajara, Jalisco",
-            "Monterrey, Nuevo León",
-            "Puebla, Puebla",
-            "Tijuana, Baja California",
-            "Mérida, Yucatán",
-        ]
-    },
-}
-
+logger = logging.getLogger(__name__)
 
 @tool
-def informacion_kavak(pregunta: str) -> str:
+def get_kavak_info(query: str) -> str:
     """
-    Proporciona información sobre servicios, garantías y propuesta de valor de Kavak.
+    Gets general information about Kavak and its services.
 
     Args:
-        pregunta: Pregunta específica sobre Kavak
+        query: User's query about Kavak, its services, processes, etc.
 
     Returns:
-        Información detallada sobre Kavak en español mexicano
+        Response in Mexican Spanish with the requested information about Kavak,
+        formatted for WhatsApp.
     """
     try:
-        pregunta_lower = pregunta.lower()
+        kb = get_kavak_knowledge_base()
+        if not kb or not kb.is_ready:
+            logger.warning(f"KavakKnowledgeBase not ready or not available in get_kavak_info. Status: {kb.initialization_error if kb else 'KB is None'}")
+            # Devolvemos cadena vacía para que el agente use su conocimiento pretrained y los system prompts
+            return ""
 
-        # Garantía
-        if any(
-            palabra in pregunta_lower
-            for palabra in ["garantía", "garantia", "cobertura", "protección"]
-        ):
-            return f"""
-✅ **Garantía Kavak**
+        # Obtain information from the knowledge base using search_knowledge
+        # search_knowledge returns a list of dicts, e.g., [{'content': '...', 'metadata': {...}}, ...]
+        search_results = kb.search_knowledge(query=query, top_k=1) # Fetch top 1 for now, can be adjusted
 
-🔧 **Cobertura:** {KAVAK_INFO['garantia']['cobertura']}
+        if not search_results:
+            # Return an empty string to signal that no specific info was found by RAG.
+            # The agent will then attempt to answer using its general system prompt knowledge.
+            logger.info(f"No specific RAG results for query: '{query}'. Returning empty string to agent.")
+            return ""
 
-📋 **Incluye:**
-• Motor y transmisión
-• Sistema eléctrico completo
-• Frenos y suspensión
-• Aire acondicionado
-• Reparaciones mecánicas mayores
+        # Combine content from results into a single string
+        # Assuming each result dict has a 'content' key, which is typical for RAG output
+        # If search_knowledge structures results differently, this needs adjustment.
+        # For now, let's assume it returns a list of strings directly as per previous structure of 'results'
+        # If search_results is List[Dict] with 'content':
+        combined_content = "\n\n".join([res.get("content", "") for res in search_results if res.get("content")])
+        
+        if not combined_content.strip():
+             return "🤔 Encontré información relacionada, pero no un texto claro para mostrar. ¿Puedes intentar otra pregunta?"
 
-❌ **No incluye:** Desgaste normal (neumáticos, filtros, aceites)
-
-💡 **Ventaja única:** Somos la única plataforma que ofrece garantía real en autos seminuevos.
-
-¿Te interesa algún auto en particular para explicarte más detalles? 🚗
-"""
-
-        # Financiamiento
-        elif any(
-            palabra in pregunta_lower
-            for palabra in [
-                "financiamiento",
-                "credito",
-                "crédito",
-                "pago",
-                "mensualidad",
-            ]
-        ):
-            return f"""
-💰 **Financiamiento Kavak**
-
-📅 **Plazos:** 12 a 84 meses
-📊 **Tasa:** Desde 10% anual
-⚡ **Aprobación:** En 24 horas
-🚫 **Sin:** Aval ni garantías adicionales
-
-✅ **Beneficios:**
-• Proceso 100% digital
-• Pago anticipado sin penalización
-• Tasas competitivas del mercado
-• Tramitación rápida y sencilla
-
-💳 ¿Quieres que calcule un plan específico para ti? Solo necesito saber tu presupuesto 😊
-"""
-
-        # Proceso de compra
-        elif any(
-            palabra in pregunta_lower
-            for palabra in ["proceso", "comprar", "compra", "como funciona", "pasos"]
-        ):
-            return f"""
-🛒 **Proceso de Compra Kavak**
-
-1️⃣ **Busca** tu auto ideal en kavak.com
-2️⃣ **Agenda** cita para verlo y probarlo  
-3️⃣ **Solicita** financiamiento (si lo necesitas)
-4️⃣ **Completa** la compra 100% digital
-5️⃣ **Recibe** tu auto con garantía
-
-⏱️ **Tiempo total:** 2-3 días
-📱 **Todo digital:** Sin filas ni papeleo
-🚗 **Entrega:** En tu domicilio o sucursal
-
-¿En qué paso te gustaría que te ayude? 😊
-"""
-
-        # Ubicaciones
-        elif any(
-            palabra in pregunta_lower
-            for palabra in ["ubicación", "ubicacion", "sucursal", "donde", "dirección"]
-        ):
-            return f"""
-📍 **Sucursales Kavak en México**
-
-🏢 **Principales ciudades:**
-• Ciudad de México (múltiples ubicaciones)
-• Guadalajara, Jalisco
-• Monterrey, Nuevo León
-• Puebla, Puebla
-• Tijuana, Baja California  
-• Mérida, Yucatán
-
-🌐 **También ofrecemos:**
-• Entrega a domicilio
-• Proceso 100% en línea
-• Prueba de manejo en tu ubicación
-
-¿En qué ciudad te encuentras? Te ayudo a encontrar la sucursal más cercana 📍
-"""
-
-        # Ventajas/propuesta de valor
-        elif any(
-            palabra in pregunta_lower
-            for palabra in ["ventaja", "beneficio", "por qué", "porque", "diferencia"]
-        ):
-            return f"""
-🏆 **¿Por qué elegir Kavak?**
-
-✅ **Garantía real:** 3 meses o 3,000 km
-✅ **Calidad certificada:** Inspección 240 puntos
-✅ **Financiamiento:** Hasta 84 meses  
-✅ **Proceso digital:** 100% en línea
-✅ **Intercambio:** Si no te gusta tu auto
-✅ **Servicio postventa:** Especializado
-
-🥇 **Somos #1 en:**
-• Autos seminuevos en México
-• Satisfacción del cliente
-• Innovación tecnológica
-• Red de distribución
-
-¿Qué es lo más importante para ti al comprar un auto? 🤔
-"""
-
-        # Intercambio
-        elif any(
-            palabra in pregunta_lower
-            for palabra in ["intercambio", "cambio", "devolver", "regresar"]
-        ):
-            return f"""
-🔄 **Intercambio Kavak**
-
-✅ **Política única en México:**
-Si tu auto no te convence, te ayudamos a cambiarlo por otro.
-
-📋 **Condiciones:**
-• Dentro de los primeros 7 días
-• Mismo rango de precio o superior
-• Sin daños adicionales
-• Sujeto a disponibilidad
-
-💡 **¿Por qué ofrecemos esto?**
-Porque estamos seguros de la calidad de nuestros autos.
-
-¿Te interesa conocer más sobre algún auto específico? 🚗
-"""
-
-        # Default - información general
+        # Ensure the response does not exceed the character limit
+        max_length = (
+            getattr(settings, "RESPONSE_MAX_LENGTH", 1500) - 100
+        )  # Leave space for the closing
+        if len(combined_content) > max_length:
+            # Find the last period before the limit for a clean cut
+            cutoff = combined_content.rfind(".", 0, max_length)
+            if cutoff == -1:  # If no periods, cut at the limit
+                cutoff = max_length
+            results_string = (
+                combined_content[:cutoff]
+                + ".\n\n¿Te gustaría que profundice en algún aspecto en particular? 😊"
+            )
         else:
-            return f"""
-🚗 **Kavak - Plataforma #1 de Autos Seminuevos**
+            results_string = combined_content
 
-🏆 **Somos líderes porque ofrecemos:**
-• Garantía de 3 meses o 3,000 km
-• Financiamiento hasta 84 meses  
-• Proceso 100% digital
-• Inspección de 240 puntos
-• Intercambio garantizado
-
-📱 **Todo desde tu celular:**
-• Busca, compara y elige
-• Solicita financiamiento
-• Agenda prueba de manejo
-• Completa tu compra
-
-🌟 **Más de 1 millón de mexicanos han confiado en nosotros**
-
-¿En qué te puedo ayudar específicamente? 
-• Encontrar auto ideal 🔍
-• Calcular financiamiento 💰  
-• Agendar prueba de manejo 📅
-• Información de garantía ✅
-"""
+        return results_string
 
     except Exception as e:
-        return f"❌ Error obteniendo información: {str(e)}. ¿Puedes ser más específico en tu pregunta?"
+        print(f"[ERROR] Error en get_kavak_info: {str(e)}")
+        return "⚠️ ¡Ups! Hubo un problema al buscar la información. Por favor, inténtalo de nuevo en un momento. Si el problema persiste, no dudes en contactar a nuestro equipo de soporte."
 
 
 @tool
-def agendar_cita() -> str:
+def schedule_appointment() -> str:
     """
-    Información sobre cómo agendar una cita para ver un auto.
+    Provides information on how to schedule an appointment to view a car.
 
     Returns:
-        Instrucciones para agendar cita
+        Instructions for scheduling an appointment in Mexican Spanish, formatted for WhatsApp.
     """
-    return f"""
-📅 **Agendar Cita en Kavak**
+    return """📅 **¡Agenda tu Cita en Kavak!** 🚗
 
-🕐 **Horarios disponibles:**
-• Lunes a Domingo: 9:00 AM - 7:00 PM
-• Incluye fines de semana y algunos festivos
+    ¡Perfecto! Uno de nuestros asesores se pondrá en contacto contigo a la brevedad para ayudarte a agendar tu cita. 
 
-📞 **Formas de agendar:**
-1️⃣ **WhatsApp:** Continúa esta conversación
-2️⃣ **Teléfono:** 55-4000-KAVAK (52825)
-3️⃣ **Página web:** kavak.com
-4️⃣ **App móvil:** Descarga Kavak
-
-📍 **Opciones de cita:**
-• En sucursal más cercana
-• Prueba de manejo a domicilio (CDMX)
-• Video llamada para ver el auto
-
-⏱️ **Duración:** 30-45 minutos
-🆓 **Costo:** Totalmente gratis
-
-¿Te gustaría que te ayude a pre-agendar para un auto específico? 😊
-"""
-
-
-@tool
-def comparar_con_competencia() -> str:
+    📋 **Por favor ten a la mano:**
+    • Identificación oficial (INE/IFE)
+    • Comprobante de domicilio
+    • Comprobantes de ingresos (si aplica para financiamiento)
+    • Documentos de tu auto actual (si planeas dejarlo a cuenta)
     """
-    Compara Kavak con otras opciones del mercado.
-
-    Returns:
-        Comparación de Kavak vs competencia
-    """
-    return f"""
-🏆 **Kavak vs Otras Opciones**
-
-📊 **Vs. Agencias tradicionales:**
-✅ Kavak: Garantía 3 meses | ❌ Otras: Sin garantía
-✅ Kavak: Proceso digital | ❌ Otras: Mucho papeleo  
-✅ Kavak: Precios fijos | ❌ Otras: Regateo necesario
-✅ Kavak: Financiamiento fácil | ❌ Otras: Trámites complejos
-
-📊 **Vs. Particulares:**
-✅ Kavak: Garantía incluida | ❌ Particulares: Sin garantía
-✅ Kavak: Inspección 240 puntos | ❌ Particulares: "Como está"
-✅ Kavak: Financiamiento | ❌ Particulares: Solo efectivo
-✅ Kavak: Servicio postventa | ❌ Particulares: Sin soporte
-
-📊 **Vs. Otras plataformas:**
-✅ Kavak: Inventario propio | ❌ Otras: Solo intermediarios
-✅ Kavak: Control de calidad | ❌ Otras: Autos variables
-✅ Kavak: Garantía real | ❌ Otras: Garantías limitadas
-
-💡 **¿El resultado?** Kavak te da la seguridad de una agencia con la comodidad digital.
-
-¿Qué es lo que más te preocupa al comprar un auto seminuevo? 🤔
-"""

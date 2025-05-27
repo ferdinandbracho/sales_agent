@@ -64,17 +64,17 @@ async def demo_kavak_info():
 
     # Test 1: General info
     print("\n1. Información general sobre Kavak")
-    result = get_kavak_info.invoke({"pregunta": "¿Qué es Kavak?"})
+    result = get_kavak_info.invoke({"query": "¿Qué es Kavak?"})
     print(result)
 
     # Test 2: Warranty info
     print("\n2. Información sobre garantías")
-    result = get_kavak_info.invoke({"pregunta": "garantía"})
+    result = get_kavak_info.invoke({"query": "garantía"})
     print(result)
 
     # Test 3: Financing info
     print("\n3. Información sobre financiamiento")
-    result = get_kavak_info.invoke({"pregunta": "financiamiento"})
+    result = get_kavak_info.invoke({"query": "financiamiento"})
     print(result)
 
 
@@ -111,7 +111,7 @@ async def demo_conversation_flow():
             )
             print(f"   Agente: {result[:200]}...")
         elif "financiamiento" in message.lower():
-            result = get_kavak_info.invoke({"pregunta": "financiamiento"})
+            result = get_kavak_info.invoke({"query": "financiamiento"})
             print(f"   Agente: {result[:200]}...")
         elif "calcular" in message.lower():
             result = calcular_financiamiento.invoke(

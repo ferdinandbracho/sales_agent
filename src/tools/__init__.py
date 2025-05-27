@@ -4,26 +4,26 @@ Herramientas del agente para búsqueda, financiamiento e información
 """
 
 from .car_search import (
-    buscar_auto_especifico,
-    buscar_autos_por_presupuesto,
-    obtener_autos_populares,
+    search_specific_car,
+    search_cars_by_budget,
+    get_popular_cars,
 )
 from .financing import (
-    calcular_financiamiento,
-    calcular_multiples_opciones,
-    calcular_presupuesto_por_mensualidad,
+    calcular_financiamiento as calculate_financing,
+    calcular_multiples_opciones as calculate_multiple_options,
+    calcular_presupuesto_por_mensualidad as calculate_budget_by_monthly_payment,
 )
 from .kavak_info import schedule_appointment, get_kavak_info
 
 __all__ = [
     # Car search tools
-    "buscar_autos_por_presupuesto",
-    "buscar_auto_especifico",
-    "obtener_autos_populares",
+    "search_cars_by_budget",
+    "search_specific_car",
+    "get_popular_cars",
     # Financing tools
-    "calcular_financiamiento",
-    "calcular_multiples_opciones",
-    "calcular_presupuesto_por_mensualidad",
+    "calculate_financing",
+    "calculate_multiple_options",
+    "calculate_budget_by_monthly_payment",
     # Kavak info tools
     "get_kavak_info",
     "schedule_appointment",

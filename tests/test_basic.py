@@ -2,8 +2,6 @@
 Basic tests for Kavak AI Agent
 """
 
-import pytest
-
 from src.tools.car_search import buscar_autos_por_presupuesto, buscar_auto_especifico
 from src.tools.financing import calcular_financiamiento
 from src.tools.kavak_info import get_kavak_info
@@ -64,20 +62,19 @@ class TestKavakInfo:
     def test_informacion_kavak_garantia(self):
         """Test warranty information"""
         result = get_kavak_info.invoke({"query": "garantía"})
-        # Cuando RAG no está disponible, devuelve una cadena vacía para que el agente use su conocimiento base
-        # En un entorno real, el agente usaría su conocimiento base para responder
+        # When rag is not available, it returns an empty string to signal to the agent to use its base knowledge
         assert result == "" or ("Garantía" in result and ("3 meses" in result or "3,000 km" in result))
 
     def test_informacion_kavak_financiamiento(self):
         """Test financing information"""
         result = get_kavak_info.invoke({"query": "financiamiento"})
-        # Cuando RAG no está disponible, devuelve una cadena vacía para que el agente use su conocimiento base
+        # When rag is not available, it returns an empty string to signal to the agent to use its base knowledge
         assert result == "" or ("Financiamiento" in result and "10%" in result)
 
     def test_informacion_kavak_general(self):
         """Test general information"""
         result = get_kavak_info.invoke({"query": "¿Qué es Kavak?"})
-        # Cuando RAG no está disponible, devuelve una cadena vacía para que el agente use su conocimiento base
+        # When rag is not available, it returns an empty string to signal to the agent to use its base knowledge
         assert result == "" or ("Kavak" in result and "🚗" in result)
 
 

@@ -2,7 +2,7 @@
 Twilio WhatsApp Webhook Handler
 """
 
-import logging
+from src.core.logging import get_logger
 
 from fastapi import APIRouter, Form, HTTPException
 from fastapi.responses import Response
@@ -26,8 +26,7 @@ from src.tools.kavak_info import (
 )
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # Create router
 router = APIRouter()

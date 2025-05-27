@@ -2,7 +2,6 @@
 Kavak AI Sales Agent - Core Agent Implementation
 """
 
-import logging
 from typing import Any, Dict, List, Optional
 
 from langchain.agents import AgentExecutor, create_openai_tools_agent
@@ -12,8 +11,9 @@ from langchain_openai import ChatOpenAI
 
 from ..config import MEXICAN_CONFIG, SPANISH_ERROR_RESPONSES, settings
 from .prompts import KAVAK_SYSTEM_PROMPT, MEXICAN_SALES_PERSONA
+from ..core.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class KavakSalesAgent:

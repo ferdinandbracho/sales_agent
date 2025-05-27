@@ -3,7 +3,6 @@ Kavak Knowledge Base - RAG Implementation
 Connects to a pre-populated ChromaDB instance.
 """
 
-import logging
 from typing import List, Optional, Dict
 
 import chromadb
@@ -11,8 +10,9 @@ from chromadb.utils import embedding_functions
 from chromadb.api.models.Collection import Collection
 
 from src.config import settings
+from src.core.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # Global instance of the Knowledge Base
 kavak_kb_instance: Optional["KavakKnowledgeBase"] = None

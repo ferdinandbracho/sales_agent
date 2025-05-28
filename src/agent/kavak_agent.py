@@ -185,8 +185,8 @@ class KavakSalesAgent:
             return []
 
         messages = []
-        # Only use last 5 turns to manage context
-        for turn in conversation_history[-5:]:
+        # Only use last 10 turns to manage context
+        for turn in conversation_history[-10:]:
             if "user" in turn and "agent" in turn:
                 messages.append(HumanMessage(content=turn["user"]))
                 messages.append(AIMessage(content=turn["agent"]))

@@ -15,7 +15,7 @@ This document provides a comprehensive guide to the project, including its archi
 
 **Important**: This is an independent project and is not affiliated with, endorsed by, or connected to Kavak in any way. It's a demonstration project only.
 
-## 📚 Table of Contents
+## Table of Contents
 
 1. [Overview](#overview)
 2. [Key Features](#key-features)

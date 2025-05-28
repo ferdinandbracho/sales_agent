@@ -158,15 +158,6 @@ quick-start: ## Complete quick start (setup + run)
 	@echo "2. Run 'make dev' to start the application"
 	@echo "3. Visit http://localhost:8000/docs for API documentation"
 
-# Development helpers
-repl: ## Start Python REPL with project context
-	@echo "🐍 Starting Python REPL with Kavak AI Agent context..."
-	uv run python -i -c "from src.config import settings; from src.tools import *; print('Kavak AI Agent REPL ready! 🚗')"
-
-shell: ## Start shell with virtual environment activated
-	@echo "🐚 Starting shell with virtual environment..."
-	@echo "Run 'uv run python' to use the virtual environment's Python"
-
 # Project info
 info: ## Show project information
 	@echo "🚗 Kavak AI Agent - Project Information"
@@ -177,7 +168,7 @@ info: ## Show project information
 	@echo ""
 	@echo "📁 Project structure:"
 	@echo "  src/           - Source code"
-	@echo "  src/agent/     - AI agent logic"  
+	@echo "  src/agent/     - AI agent logic"
 	@echo "  src/tools/     - Agent tools"
 	@echo "  src/webhook/   - WhatsApp integration"
 	@echo "  data/          - Car catalog data"

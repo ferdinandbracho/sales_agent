@@ -14,13 +14,13 @@ from src.core.exceptions import setup_exception_handlers
 # Initialize logging
 from src.core.logging import get_logger, setup_logging
 from src.core.middleware import setup_middleware
+
+# Import knowledge base initializer
+from src.knowledge.kavak_knowledge import initialize_global_kavak_kb
 from src.schemas.responses import HealthCheckResponse, HealthStatus, RootResponse
 
 # Import routes and schemas
 from src.webhook.twilio_handler import router as webhook_router
-
-# Import knowledge base initializer
-from src.knowledge.kavak_knowledge import initialize_global_kavak_kb
 
 # Configure logging using settings from config
 setup_logging()
@@ -28,6 +28,7 @@ setup_logging()
 # Get logger for this module
 logger = get_logger(__name__)
 logger.info("Starting application...")
+
 
 # Lifespan Management
 @asynccontextmanager
@@ -39,6 +40,7 @@ async def lifespan(app_instance: FastAPI):
     yield
     # Shutdown (if any cleanup needed in the future)
     logger.info("Application shutdown.")
+
 
 # Create FastAPI app
 app = FastAPI(
@@ -58,7 +60,7 @@ app = FastAPI(
             "description": "Endpoints for monitoring and service status",
         },
     ],
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Setup middlewares and exception handlers

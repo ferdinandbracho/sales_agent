@@ -45,14 +45,14 @@ async def demo_financing():
     # Test 1: Basic financing calculation
     print("\n1. Financiamiento básico (Auto $300k, enganche $60k, 4 años)")
     result = calculate_financing.invoke(
-        {"precio_auto": 300000.0, "enganche": 60000.0, "anos": 4}
+        {"car_price": 300000.0, "down_payment": 60000.0, "years": 4}
     )
     print(result)
 
     # Test 2: Multiple options
     print("\n2. Múltiples opciones (Auto $250k, enganche 20%)")
     result = calculate_multiple_options.invoke(
-        {"precio_auto": 250000.0, "porcentaje_enganche": 20.0}
+        {"car_price": 250000.0, "down_payment_percentage": 20.0}
     )
     print(result)
 
@@ -115,7 +115,7 @@ async def demo_conversation_flow():
             print(f"   Agente: {result[:200]}...")
         elif "calcular" in message.lower():
             result = calculate_financing.invoke(
-                {"precio_auto": 280000.0, "enganche": 280000 * 0.2, "anos": 4}
+                {"car_price": 280000.0, "down_payment": 280000 * 0.2, "years": 4}
             )
             print(f"   Agente: {result[:200]}...")
 

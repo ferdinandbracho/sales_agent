@@ -6,9 +6,10 @@ warranties, and value proposition in Mexican Spanish.
 """
 
 from langchain.tools import tool
+
 from ..config import settings
-from ..knowledge.kavak_knowledge import get_kavak_knowledge_base
 from ..core.logging import get_logger
+from ..knowledge.kavak_knowledge import get_kavak_knowledge_base
 
 logger = get_logger(__name__)
 

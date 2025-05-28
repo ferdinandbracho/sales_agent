@@ -1,5 +1,5 @@
 """
-Enhanced Kavak Knowledge Setup - Now populates ChromaDB directly.
+Enhanced Kavak Knowledge Setup
 """
 
 import json

@@ -59,7 +59,7 @@ test-tools: ## Test individual agent tools
 	@echo "\n🚗 Testing car search tool..."
 	uv run python -c "from src.tools.car_search import search_cars_by_budget; print(search_cars_by_budget.invoke({'max_price': 300000, 'brand': 'Toyota'}))"
 	@echo "\n💰 Testing financing tool..."
-	uv run python -c "from src.tools.financing import calculate_financing; print(calculate_financing.invoke({'price': 250000, 'down_payment': 50000, 'years': 4}))"
+	uv run python -c "from src.tools.financing import calculate_financing; print(calculate_financing.invoke({'car_price': 250000, 'down_payment': 50000, 'years': 4}))"
 	@echo "\nℹ️  Testing Kavak info tool..."
 	uv run python -c "from src.tools.kavak_info import get_kavak_info; print(get_kavak_info.invoke({'query': 'garantía'}))"
 

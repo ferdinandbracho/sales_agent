@@ -10,8 +10,8 @@ from langchain.schema import AIMessage, BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 
 from ..config import MEXICAN_CONFIG, SPANISH_ERROR_RESPONSES, settings
-from .prompts import KAVAK_SYSTEM_PROMPT, MEXICAN_SALES_PERSONA
 from ..core.logging import get_logger
+from .prompts import KAVAK_SYSTEM_PROMPT, MEXICAN_SALES_PERSONA
 
 logger = get_logger(__name__)
 

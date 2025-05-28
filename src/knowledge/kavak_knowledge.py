@@ -3,11 +3,11 @@ Kavak Knowledge Base - RAG Implementation
 Connects to a pre-populated ChromaDB instance.
 """
 
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 import chromadb
-from chromadb.utils import embedding_functions
 from chromadb.api.models.Collection import Collection
+from chromadb.utils import embedding_functions
 
 from src.config import settings
 from src.core.logging import get_logger
@@ -64,7 +64,7 @@ class KavakKnowledgeBase:
                 logger.info(f"Attempting to get collection: '{self.collection_name}'")
                 self.collection = self.chroma_client.get_collection(
                     name=self.collection_name,
-                    embedding_function=self.embedding_function
+                    embedding_function=self.embedding_function,
                 )
                 logger.info(f"Successfully got collection '{self.collection_name}'.")
                 collection_count = self.collection.count()
@@ -76,10 +76,14 @@ class KavakKnowledgeBase:
                     logger.info(
                         f"Collection '{self.collection_name}' contains {collection_count} documents."
                     )
-            except Exception as e:  # Handles collection not found and other get_collection errors
+            except (
+                Exception
+            ) as e:  # Handles collection not found and other get_collection errors
                 self.initialization_error = f"Failed to get ChromaDB collection '{self.collection_name}': {e}. This is expected if 'make setup-knowledge' has not been run. RAG will be unavailable."
-                logger.warning(self.initialization_error) # Log as warning, not error
-                self.collection = None  # Ensure collection is None if not found/accessible
+                logger.warning(self.initialization_error)  # Log as warning, not error
+                self.collection = (
+                    None  # Ensure collection is None if not found/accessible
+                )
 
         except Exception as e:  # Catches errors connecting to ChromaDB service itself
             self.initialization_error = (
@@ -88,17 +92,24 @@ class KavakKnowledgeBase:
             logger.error(self.initialization_error, exc_info=True)
             self.collection = None
 
-
         # Final status log (informative only)
         if self.chroma_client:
             if self.collection and self.collection.count() > 0:
-                logger.info("KavakKnowledgeBase initialized: ChromaDB service connected and collection loaded with data.")
+                logger.info(
+                    "KavakKnowledgeBase initialized: ChromaDB service connected and collection loaded with data."
+                )
             elif self.collection:
-                logger.warning("KavakKnowledgeBase initialized: ChromaDB service connected, collection found but is EMPTY. RAG will yield no results.")
+                logger.warning(
+                    "KavakKnowledgeBase initialized: ChromaDB service connected, collection found but is EMPTY. RAG will yield no results."
+                )
             else:
-                logger.warning("KavakKnowledgeBase initialized: ChromaDB service connected, but collection NOT found or accessible. RAG will be unavailable.")
+                logger.warning(
+                    "KavakKnowledgeBase initialized: ChromaDB service connected, but collection NOT found or accessible. RAG will be unavailable."
+                )
         else:
-            logger.error("KavakKnowledgeBase initialization FAILED: Could not connect to ChromaDB service.")
+            logger.error(
+                "KavakKnowledgeBase initialization FAILED: Could not connect to ChromaDB service."
+            )
 
     @property
     def is_ready(self) -> bool:
@@ -121,8 +132,7 @@ class KavakKnowledgeBase:
         try:
             # Attempt to get the collection. This also serves as a heartbeat for the collection.
             current_collection = self.chroma_client.get_collection(
-                name=self.collection_name,
-                embedding_function=self.embedding_function
+                name=self.collection_name, embedding_function=self.embedding_function
             )
             self.collection = current_collection
 
@@ -131,18 +141,27 @@ class KavakKnowledgeBase:
                 self.initialization_error = None
                 return True
             else:
-                self.initialization_error = f"Collection '{self.collection_name}' exists but is empty."
+                self.initialization_error = (
+                    f"Collection '{self.collection_name}' exists but is empty."
+                )
                 logger.warning(f"RAG Status: Not Ready. {self.initialization_error}")
                 return False
         except chromadb.errors.NotFoundError:
-            self.initialization_error = f"Collection '{self.collection_name}' does not exist."
+            self.initialization_error = (
+                f"Collection '{self.collection_name}' does not exist."
+            )
             logger.warning(f"RAG Status: Not Ready. {self.initialization_error}")
             self.collection = None
             return False
         except Exception as e:
             # Catch other potential errors during collection access
-            self.initialization_error = f"Failed to access or verify collection '{self.collection_name}': {e}"
-            logger.error(f"RAG Status: Not Ready. Unexpected error: {self.initialization_error}", exc_info=True)
+            self.initialization_error = (
+                f"Failed to access or verify collection '{self.collection_name}': {e}"
+            )
+            logger.error(
+                f"RAG Status: Not Ready. Unexpected error: {self.initialization_error}",
+                exc_info=True,
+            )
             self.collection = None
             return False
 
@@ -229,11 +248,9 @@ def initialize_global_kavak_kb():
                 f"Global Kavak Knowledge Base initialized, but RAG is not fully ready. Reason: {kavak_kb_instance.initialization_error}. The agent will attempt to function with limited/no RAG capabilities."
             )
         elif kavak_kb_instance.is_ready:
-            logger.info(
-                "Global Kavak Knowledge Base initialized and RAG is ready."
-            )
-        else: # Should ideally be caught, but as a fallback
-             logger.warning(
+            logger.info("Global Kavak Knowledge Base initialized and RAG is ready.")
+        else:  # Should ideally be caught, but as a fallback
+            logger.warning(
                 f"Global Kavak Knowledge Base initialized, but RAG is not ready. Status: {kavak_kb_instance.initialization_error or 'Unknown. Check KB logs.'}. The agent will attempt to function with limited/no RAG capabilities."
             )
     return kavak_kb_instance

@@ -7,8 +7,8 @@ import re
 from typing import List, Optional, Tuple
 
 import pandas as pd
-from rapidfuzz import fuzz, process
 from langchain.tools import tool
+from rapidfuzz import fuzz, process
 
 from ..core.logging import get_logger
 

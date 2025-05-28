@@ -13,7 +13,7 @@ from rapidfuzz import fuzz, process
 from ..core.logging import get_logger
 
 # Initialize logger
-log = get_logger(__name__)
+logger = get_logger(__name__)
 
 # Path to car data
 CAR_DATA_PATH = os.path.join(
@@ -23,10 +23,10 @@ CAR_DATA_PATH = os.path.join(
 
 def load_car_data() -> pd.DataFrame:
     """Load car data from CSV file"""
-    log.info("Loading car data from %s", CAR_DATA_PATH)
+    logger.info("Loading car data from %s", CAR_DATA_PATH)
     try:
         df = pd.read_csv(CAR_DATA_PATH)
-        log.info("Successfully loaded %d car records", len(df))
+        logger.info("Successfully loaded %d car records", len(df))
         # Create searchable description for each car
         df["descripcion"] = df.apply(
             lambda row: (
@@ -40,7 +40,7 @@ def load_car_data() -> pd.DataFrame:
         )
         return df
     except Exception:
-        log.error("Error loading car data", exc_info=True)
+        logger.error("Error loading car data", exc_info=True)
         return pd.DataFrame()
 
 
@@ -69,7 +69,7 @@ def search_cars_by_budget(
 
         # Filter by brand if specified
         if brand:
-            log.debug("Filtering by brand: %s", brand)
+            logger.debug("Filtering by brand: %s", brand)
             brand_clean = brand.strip().title()
             filtered_cars = filtered_cars[
                 filtered_cars["make"].str.contains(brand_clean, case=False, na=False)
@@ -90,7 +90,7 @@ def search_cars_by_budget(
             """
 
         # Format top 5 results
-        log.info(
+        logger.info(
             "Fuzzy search completed. Found %d matching vehicles", len(filtered_cars)
         )
         results = filtered_cars.head(5)
@@ -209,18 +209,18 @@ def _get_best_match(
 ) -> Optional[Tuple[str, int]]:
     """Find the best match for a query from a list of choices"""
     if not query or not choices:
-        log.debug("Empty query or choices provided")
+        logger.debug("Empty query or choices provided")
         return None
 
-    log.debug("Finding best match for query: %s", query)
+    logger.debug("Finding best match for query: %s", query)
 
     # First try exact match
     normalized_choices = {_normalize_text(c): c for c in choices}
     normalized_query = _normalize_text(query)
-    log.debug("Normalized query: %s", normalized_query)
+    logger.debug("Normalized query: %s", normalized_query)
 
     if normalized_query in normalized_choices:
-        log.debug("Found exact match: %s", normalized_query)
+        logger.debug("Found exact match: %s", normalized_query)
         return (normalized_choices[normalized_query], 100)
 
     # Try fuzzy matching
@@ -232,11 +232,11 @@ def _get_best_match(
     )
 
     if result is None:
-        log.debug("No match found above threshold (%d)", threshold)
+        logger.debug("No match found above threshold (%d)", threshold)
         return None
 
     best_match, score, _ = result
-    log.debug("Best fuzzy match: %s (score: %d)", best_match, score)
+    logger.debug("Best fuzzy match: %s (score: %d)", best_match, score)
 
     # Return the original string (not normalized) that matches
     return (normalized_choices[best_match], score)
@@ -249,7 +249,7 @@ def _correct_common_typos(text: str) -> str:
 
     original_text = text
     text = text.lower()
-    log.debug("Correcting typos in: %s", original_text)
+    logger.debug("Correcting typos in: %s", original_text)
 
     # Common brand typos
     brand_typos = {
@@ -284,7 +284,7 @@ def _correct_common_typos(text: str) -> str:
     for typo, correction in brand_typos.items():
         if re.search(typo, text):
             text = re.sub(typo, correction, text)
-            log.debug("Corrected brand typo: %s -> %s", original_text, text)
+            logger.debug("Corrected brand typo: %s -> %s", original_text, text)
             break  # Only apply one brand corrections
 
     # Then apply model corrections
@@ -299,19 +299,19 @@ def search_with_fuzzy_matching(
     df: pd.DataFrame, brand: Optional[str] = None, model: Optional[str] = None
 ) -> pd.DataFrame:
     """Search for cars with fuzzy matching on brand and model"""
-    log.info(
+    logger.info(
         "Starting fuzzy search with brand='%s', model='%s'",
         brand or "None",
         model or "None",
     )
 
     if df.empty:
-        log.warning("Empty DataFrame provided to search_with_fuzzy_matching")
+        logger.warning("Empty DataFrame provided to search_with_fuzzy_matching")
         return df
 
     # Make copies to avoid SettingWithCopyWarning
     df_filtered = df.copy()
-    log.debug("Created working copy of DataFrame with %d rows", len(df_filtered))
+    logger.debug("Created working copy of DataFrame with %d rows", len(df_filtered))
 
     # Apply text normalization and corrections
     if brand:
@@ -325,34 +325,34 @@ def search_with_fuzzy_matching(
     if brand and not df_filtered.empty:
         # Get unique brands for matching
         unique_brands = df_filtered["make"].unique().tolist()
-        log.debug("Matching against %d unique brands", len(unique_brands))
+        logger.debug("Matching against %d unique brands", len(unique_brands))
         best_brand_match = _get_best_match(brand, unique_brands)
 
         if best_brand_match:
             matched_brand, score = best_brand_match
-            log.debug("Matched brand: %s (score: %d)", matched_brand, score)
+            logger.debug("Matched brand: %s (score: %d)", matched_brand, score)
             df_filtered = df_filtered[df_filtered["make"] == matched_brand]
-            log.debug("Filtered to %d matching brand rows", len(df_filtered))
+            logger.debug("Filtered to %d matching brand rows", len(df_filtered))
         else:
-            log.warning("No brand match found for: %s", brand)
+            logger.warning("No brand match found for: %s", brand)
             return pd.DataFrame()
 
     if model and not df_filtered.empty:
         # Get unique models for the filtered brands
         unique_models = df_filtered["model"].unique().tolist()
-        log.debug("Matching against %d unique models", len(unique_models))
+        logger.debug("Matching against %d unique models", len(unique_models))
         best_model_match = _get_best_match(model, unique_models)
 
         if best_model_match:
             matched_model, score = best_model_match
-            log.debug("Matched model: %s (score: %d)", matched_model, score)
+            logger.debug("Matched model: %s (score: %d)", matched_model, score)
             df_filtered = df_filtered[df_filtered["model"] == matched_model]
-            log.debug("Filtered to %d matching model rows", len(df_filtered))
+            logger.debug("Filtered to %d matching model rows", len(df_filtered))
         else:
-            log.warning("No model match found for: %s", model)
+            logger.warning("No model match found for: %s", model)
             return pd.DataFrame()
 
-    log.info("Fuzzy search completed. Found %d matching vehicles", len(df_filtered))
+    logger.info("Fuzzy search completed. Found %d matching vehicles", len(df_filtered))
     return df_filtered
 
 
@@ -400,5 +400,5 @@ def get_popular_cars() -> str:
         return response
 
     except Exception as error:
-        log.error("Error getting popular cars: %s", str(error), exc_info=True)
+        logger.error("Error getting popular cars: %s", str(error), exc_info=True)
         return "❌ Error obteniendo autos populares. ¿Intentamos de nuevo?"

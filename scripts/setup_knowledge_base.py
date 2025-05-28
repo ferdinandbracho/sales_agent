@@ -25,7 +25,7 @@ def create_comprehensive_kavak_knowledge() -> List[Dict]:
     Create comprehensive Kavak knowledge base
     Combines scraping attempts with rich fallback content
     """
-    logger.info("🏗️ Creating comprehensive Kavak fallback knowledge content...")
+    logger.info("Creating comprehensive Kavak fallback knowledge content...")
 
     # Add timestamp and source information
     current_date = datetime.datetime.now().strftime("%Y-%m-%d")

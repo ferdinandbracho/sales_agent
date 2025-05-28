@@ -97,7 +97,11 @@ class TestAPIEndpoints:
     @patch(
         "src.webhook.twilio_handler.process_with_kavak_agent", new_callable=AsyncMock
     )
-    def test_test_agent_endpoint(self, mock_process, client):
+    @patch(
+        "src.webhook.twilio_handler.redis_memory.get_conversation",
+        return_value=[{"user": "test", "agent": "test"}],
+    )
+    def test_test_agent_endpoint(self, mock_redis, mock_process, client):
         """Test agent test endpoint"""
         # Setup mock
         mock_process.return_value = "Respuesta de prueba del agente"
@@ -105,7 +109,7 @@ class TestAPIEndpoints:
         # Test endpoint
         response = client.post(
             "/webhook/test-agent",
-            json={"message": "Hola", "session_id": "test_session"},
+            params={"message": "Hola", "session_id": "test_session"},
         )
 
         # Verify response
@@ -115,10 +119,10 @@ class TestAPIEndpoints:
 
     def test_clear_conversation(self, client):
         """Test clear conversation endpoint"""
-        # First add a conversation to memory
+        # Mock Redis delete_conversation to return True (success)
         with patch(
-            "src.webhook.twilio_handler.conversation_memory",
-            {"test_session": [{"user": "test", "agent": "test"}]},
+            "src.webhook.twilio_handler.redis_memory.delete_conversation",
+            return_value=True,
         ):
             response = client.delete("/webhook/conversations/test_session")
 
@@ -130,8 +134,15 @@ class TestAPIEndpoints:
         """Test list conversations endpoint"""
         # Setup mock conversations
         with patch(
-            "src.webhook.twilio_handler.conversation_memory",
-            {"test_session": [{"user": "test", "agent": "test", "timestamp": "123"}]},
+            "src.webhook.twilio_handler.redis_memory.list_active_sessions",
+            return_value={
+                "test_session": {
+                    "message_count": 1,
+                    "last_message": "test",
+                    "ttl_seconds": 3600,
+                    "last_activity": 1621234567,
+                }
+            },
         ):
             response = client.get("/webhook/conversations")
 
@@ -193,7 +204,7 @@ class TestProcessWithKavakAgent:
         )
 
         # Verify result contains fallback message
-        assert "No recibí una respuesta" in result or "¡Ups!" in result
+        assert "¡Hola! Soy tu agente comercial de Kavak" in result
 
     @patch("src.webhook.twilio_handler.kavak_agent")
     async def test_process_with_agent_long_response(self, mock_agent):

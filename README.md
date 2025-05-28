@@ -243,35 +243,99 @@ This approach ensures the system remains functional even when external sources a
 1. **Factory Pattern**: Used in `create_kavak_agent()` to create and configure the agent with tools
 2. **Singleton Pattern**: Used for global knowledge base instance
 
-### Error Handling Strategy
+### Redis Conversation Memory
 
-The application implements a multi-layered error handling approach:
+#### Overview
 
-1. **Tool-level error handling**: Each tool handles its own exceptions and returns user-friendly Spanish messages
-2. **Agent-level error handling**: The agent has fallback mechanisms when tools fail
-3. **Application-level error handling**: FastAPI exception handlers provide consistent error responses
-4. **Infrastructure-level resilience**: Connection retry logic for external services
+The application uses Redis for persistent conversation memory, enabling stateful interactions with users across multiple sessions.
 
-### Configuration Management
+#### Features
 
-The application uses a hierarchical configuration system:
+* **Persistence**: Conversation history is preserved across application restarts
+* **TTL (Time-To-Live)**: Conversations automatically expire after a configurable period
+* **Performance**: In-memory storage ensures low-latency access to conversation history
+* **High Availability**: Redis Sentinel support for failover scenarios
 
-* **Environment variables**: For sensitive information and deployment-specific settings
-* **Pydantic Settings**: For type-safe configuration management
-* **Mexican-specific configurations**: For language and cultural adaptation
+#### Configuration
 
-### Deployment Architecture
+Redis is configured using the following environment variables:
 
-For production deployment, the application containerized architecture:
+* `REDIS_URL`: Connection URL for Redis (default: `redis://localhost:6379`)
+  * Format: `redis://[username:password@]host[:port][/db-number]`
+  * Example: `redis://:mypassword@redis-host:6379/0`
+* `REDIS_PASSWORD`: Optional password for Redis authentication
 
-```mermaid
-graph TD
-    LoadBalancer["Load Balancer"] --> KavakAPI["Kavak API (FastAPI)"]
-    KavakAPI --> Redis["Redis (Memory)"]
-    KavakAPI --> ChromaDB["ChromaDB (Vector DB)"]
-    KavakAPI --> OpenAIAPI["OpenAI API (External)"]
+#### Docker Compose Setup
+
+The Redis service is pre-configured in `docker-compose.yml` with the following settings:
+
+```yaml
+redis:
+  image: redis:7-alpine
+  container_name: kavak-redis
+  ports:
+    - "6379:6379"
+  volumes:
+    - redis_data:/data
+  healthcheck:
+    test: ["CMD", "redis-cli", "ping"]
+    interval: 5s
+    timeout: 5s
+    retries: 5
+  restart: unless-stopped
 ```
 
+Key features:
+* **Persistence**: Data is stored in a Docker volume named `redis_data`
+* **Health Checks**: Automatic monitoring of Redis service health
+* **Auto-restart**: Service restarts automatically if it fails
+* **Resource Limits**: Configured with appropriate memory limits
+
+#### Data Structure
+
+Conversation data is stored using the following Redis data structures:
+
+1. **Conversation History** (List)
+   * Key: `conversation:{session_id}`
+   * Type: List of JSON-encoded messages
+   * TTL: 30 days (configurable)
+
+2. **Session Metadata** (Hash)
+   * Key: `session:{session_id}:meta`
+   * Fields:
+     * `created_at`: Timestamp of session creation
+     * `updated_at`: Timestamp of last activity
+     * `message_count`: Total messages in conversation
+
+#### Monitoring and Maintenance
+
+To monitor Redis performance and health:
+
+1. **Redis CLI**:
+   ```bash
+   docker exec -it kavak-redis redis-cli
+   ```
+
+2. **Key Metrics**:
+   ```bash
+   # Check memory usage
+   redis-cli info memory
+   
+   # Monitor connected clients
+   redis-cli info clients
+   
+   # Get all keys matching a pattern
+   redis-cli --scan --pattern 'conversation:*' | wc -l
+   ```
+
+3. **Backup and Restore**:
+   ```bash
+   # Create backup
+   docker exec kavak-redis redis-cli SAVE
+   
+   # Copy backup file
+   cp /var/lib/docker/volumes/kavak_challenge_commercial_agent_redis_data/_data/dump.rdb /path/to/backup/
+   ```
 ## API Reference
 
 ### API Endpoints
@@ -523,6 +587,7 @@ Formatted string with information in Spanish.
   * [OpenAI API key](https://platform.openai.com/api-keys)
   * [Twilio account](https://www.twilio.com/try-twilio) (for WhatsApp integration)
   * [ngrok account](https://ngrok.com/) (for local development with WhatsApp)
+  * Redis CLI (optional, for debugging)
 
 #### Local Setup
 

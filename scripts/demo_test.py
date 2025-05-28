@@ -10,7 +10,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 from src.tools.car_search import search_cars_by_budget, search_specific_car
-from src.tools.financing import calcular_financiamiento as calculate_financing, calcular_multiples_opciones as calculate_multiple_options
+from src.tools.financing import calculate_financing, calculate_multiple_options
 from src.tools.kavak_info import get_kavak_info
 
 

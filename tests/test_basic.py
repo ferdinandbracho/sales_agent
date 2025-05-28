@@ -13,7 +13,7 @@ from src.tools.car_search import (
     _correct_common_typos,
     _get_best_match,
 )
-from src.tools.financing import calcular_financiamiento as calculate_financing
+from src.tools.financing import calculate_financing
 from src.tools.kavak_info import get_kavak_info
 
 
@@ -141,7 +141,7 @@ class TestFinancing:
     def test_calculate_financing_valid(self):
         """Test valid financing calculation"""
         result = calculate_financing.invoke(
-            {"precio_auto": 300000.0, "enganche": 60000.0, "anos": 4}
+            {"car_price": 300000.0, "down_payment": 60000.0, "years": 4}
         )
         assert "💰" in result
         assert "Plan de Financiamiento" in result
@@ -150,14 +150,14 @@ class TestFinancing:
     def test_calculate_financing_invalid_price(self):
         """Test invalid car price"""
         result = calculate_financing.invoke(
-            {"precio_auto": -1000.0, "enganche": 60000.0, "anos": 4}
+            {"car_price": -1000.0, "down_payment": 60000.0, "years": 4}
         )
         assert "❌" in result
 
     def test_calculate_financing_invalid_years(self):
         """Test invalid financing years"""
         result = calculate_financing.invoke(
-            {"precio_auto": 300000.0, "enganche": 60000.0, "anos": 10}
+            {"car_price": 300000.0, "down_payment": 60000.0, "years": 10}
         )
         assert "❌" in result
         assert "3, 4, 5 o 6 años" in result
@@ -212,7 +212,7 @@ class TestSpanishResponses:
     def test_financing_spanish(self):
         """Ensure financing responses are in Spanish"""
         result = calculate_financing.invoke(
-            {"precio_auto": 250000.0, "enganche": 50000.0, "anos": 4}
+            {"car_price": 250000.0, "down_payment": 50000.0, "years": 4}
         )
         spanish_indicators = ["Financiamiento", "enganche", "mensual", "años", "pesos"]
         assert any(word in result for word in spanish_indicators)

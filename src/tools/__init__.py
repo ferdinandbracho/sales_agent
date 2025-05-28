@@ -9,9 +9,9 @@ from .car_search import (
     get_popular_cars,
 )
 from .financing import (
-    calcular_financiamiento as calculate_financing,
-    calcular_multiples_opciones as calculate_multiple_options,
-    calcular_presupuesto_por_mensualidad as calculate_budget_by_monthly_payment,
+    calculate_financing,
+    calculate_multiple_options,
+    calculate_budget_by_monthly_payment,
 )
 from .kavak_info import schedule_appointment, get_kavak_info
 

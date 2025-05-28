@@ -10,7 +10,6 @@ import pandas as pd
 from rapidfuzz import fuzz, process
 from langchain.tools import tool
 
-from ..config import MEXICAN_CONFIG
 from ..core.logging import get_logger
 
 # Initialize logger
@@ -264,7 +263,7 @@ def _correct_common_typos(text: str) -> str:
         r"^mazada$": "mazda",
         r"^mitsubitshi$": "mitsubishi",
         r"^mercedez$": "mercedes",
-        r"^bmw$": "bmw",  # Keep as is, just for consistency
+        r"^bmw$": "bmw",
     }
 
     # Common model typos
@@ -385,9 +384,7 @@ def get_popular_cars() -> str:
         # Get most common makes
         popular_brands = df["make"].value_counts().head(5)
 
-        response = (
-            f"{MEXICAN_CONFIG['emojis']['car']} **Autos más populares en Kavak:**\n\n"
-        )
+        response = "🚗 **Autos más populares en Kavak:**\n\n"
 
         for brand, count in popular_brands.items():
             auto_ejemplo = df[df["make"] == brand].sort_values("price").iloc[0]

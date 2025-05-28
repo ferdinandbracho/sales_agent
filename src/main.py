@@ -50,7 +50,20 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    contact={
+        "name": "Ferdinand Bracho",
+        "email": "ferdinand.bracho@gmail.com",
+        "url": "https://github.com/ferdinandbracho",
+    },
+    license_info={
+        "name": "MIT License",
+        "url": "https://github.com/ferdinandbracho/kavak_challenge/blob/main/LICENSE",
+    },
     openapi_tags=[
+        {
+            "name": "Root",
+            "description": "Root endpoint",
+        },
         {
             "name": "WhatsApp",
             "description": "Endpoints for WhatsApp integration",
@@ -58,6 +71,14 @@ app = FastAPI(
         {
             "name": "Health",
             "description": "Endpoints for monitoring and service status",
+        },
+        {
+            "name": "Testing",
+            "description": "Endpoints for testing the agent",
+        },
+        {
+            "name": "Conversations",
+            "description": "Endpoints for managing conversation history",
         },
     ],
     lifespan=lifespan,

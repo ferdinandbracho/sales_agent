@@ -50,9 +50,27 @@ run-local: ## Run the application locally
 	@echo "🚗 Starting Kavak AI Agent..."
 	uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 
-test: ## Run tests
-	@echo "🧪 Running tests..."
-	uv run pytest tests/ -v
+test: ## Run all tests
+	@echo "🧪 Running all tests..."
+	uv run pytest -v -p pytest_dotenv -p pytest_asyncio --cache-clear tests/
+
+.PHONY: test-unit test-integration test-e2e test-cov
+
+test-unit: ## Run unit tests only
+	@echo "🧪 Running unit tests..."
+	uv run python tests/run_tests.py --unit --verbose
+
+test-integration: ## Run integration tests only
+	@echo "🧪 Running integration tests..."
+	uv run python tests/run_tests.py --integration --verbose
+
+test-e2e: ## Run end-to-end tests only
+	@echo "🧪 Running end-to-end tests..."
+	uv run python tests/run_tests.py --e2e --verbose
+
+test-cov: ## Run tests with coverage report
+	@echo "🧪 Running tests with coverage..."
+	uv run python tests/run_tests.py --all --verbose --coverage
 
 test-tools: ## Test individual agent tools
 	@echo "🔧 Testing agent tools..."

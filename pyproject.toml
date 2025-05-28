@@ -39,10 +39,13 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "black>=23.0.0",
-    "isort>=5.12.0",
+    "black>=25.1.0",
+    "isort>=6.0.1",
     "mypy>=1.0.0",
     "pytest-cov>=4.0.0",
+    "pytest-dotenv>=0.5.2",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.10.0",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -59,11 +62,7 @@ line_length = 88
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = "test_*.py"
+python_files = "tests.py test_*.py *_tests.py"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 python_functions = "test_*"
-
-[dependency-groups]
-dev = [
-    "black>=25.1.0",
-    "isort>=6.0.1",
-]

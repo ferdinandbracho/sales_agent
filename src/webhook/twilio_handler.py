@@ -2,6 +2,7 @@
 Twilio WhatsApp Webhook Handler
 """
 
+import time
 from fastapi import APIRouter, Form, HTTPException, status
 from fastapi.responses import Response
 from twilio.twiml.messaging_response import MessagingResponse
@@ -418,6 +419,7 @@ async def test_agent_locally(request: TestAgentRequest):
     - **session_id**: Optional session ID for conversation tracking (default: "test_session")
     """
     try:
+        start_time = time.time()
         response = await process_with_kavak_agent(
             message=request.message,
             session_id=request.session_id,
@@ -428,6 +430,7 @@ async def test_agent_locally(request: TestAgentRequest):
             "user_message": request.message,
             "agent_response": response,
             "session_id": request.session_id,
+            "processing_time": time.time() - start_time,
         }
 
     except Exception as e:
@@ -523,7 +526,7 @@ async def list_conversations():
             {
                 "session_id": session_id,
                 "message_count": len(history),
-                "last_message": history[-1]["content"] if history else None,
+                "last_message": history[-1].get("content") if history and isinstance(history[-1], dict) else None,
                 "created_at": datetime.now(timezone.utc).isoformat(),
             }
         )

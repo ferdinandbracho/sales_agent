@@ -4,6 +4,7 @@ Car Search Tool
 
 import os
 import re
+import unicodedata
 from typing import List, Optional, Tuple
 
 import pandas as pd
@@ -199,8 +200,12 @@ def _normalize_text(text: str) -> str:
     """Normalize text for better matching"""
     if not isinstance(text, str):
         return ""
+    # Convert to lowercase and normalize unicode characters
     text = text.lower().strip()
-    text = re.sub(r"[^\w\s]", "", text)  # Remove special chars
+    # Normalize accented characters to their base form
+    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
+    # Remove any remaining special characters
+    text = re.sub(r"[^\w\s]", "", text)
     return text
 
 
@@ -271,6 +276,7 @@ def _correct_common_typos(text: str) -> str:
         r"civic.*": "civic",
         r"sentra.*": "sentra",
         r"corolla.*": "corolla",
+        r"jeta.*": "jetta",
         r"jetta.*": "jetta",
         r"golf.*": "golf",
         r"versa.*": "versa",

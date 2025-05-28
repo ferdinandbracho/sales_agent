@@ -57,11 +57,11 @@ test: ## Run tests
 test-tools: ## Test individual agent tools
 	@echo "🔧 Testing agent tools..."
 	@echo "\n🚗 Testing car search tool..."
-	uv run python -c "from src.tools.car_search import buscar_autos_por_presupuesto; print(buscar_autos_por_presupuesto.invoke({'presupuesto_maximo': 300000, 'marca': 'Toyota'}))"
+	uv run python -c "from src.tools.car_search import search_cars_by_budget; print(search_cars_by_budget.invoke({'max_price': 300000, 'brand': 'Toyota'}))"
 	@echo "\n💰 Testing financing tool..."
-	uv run python -c "from src.tools.financing import calcular_financiamiento; print(calcular_financiamiento.invoke({'precio_auto': 250000, 'enganche': 50000, 'anos': 4}))"
+	uv run python -c "from src.tools.financing import calculate_financing; print(calculate_financing.invoke({'car_price': 250000, 'down_payment': 50000, 'years': 4}))"
 	@echo "\nℹ️  Testing Kavak info tool..."
-	uv run python -c "from src.tools.kavak_info import get_kavak_info; print(get_kavak_info.invoke({'pregunta': 'garantía'}))"
+	uv run python -c "from src.tools.kavak_info import get_kavak_info; print(get_kavak_info.invoke({'query': 'garantía'}))"
 
 demo: ## Run demo conversation scenarios
 	@echo "🎭 Running demo scenarios..."
@@ -158,15 +158,6 @@ quick-start: ## Complete quick start (setup + run)
 	@echo "2. Run 'make dev' to start the application"
 	@echo "3. Visit http://localhost:8000/docs for API documentation"
 
-# Development helpers
-repl: ## Start Python REPL with project context
-	@echo "🐍 Starting Python REPL with Kavak AI Agent context..."
-	uv run python -i -c "from src.config import settings; from src.tools import *; print('Kavak AI Agent REPL ready! 🚗')"
-
-shell: ## Start shell with virtual environment activated
-	@echo "🐚 Starting shell with virtual environment..."
-	@echo "Run 'uv run python' to use the virtual environment's Python"
-
 # Project info
 info: ## Show project information
 	@echo "🚗 Kavak AI Agent - Project Information"
@@ -177,7 +168,7 @@ info: ## Show project information
 	@echo ""
 	@echo "📁 Project structure:"
 	@echo "  src/           - Source code"
-	@echo "  src/agent/     - AI agent logic"  
+	@echo "  src/agent/     - AI agent logic"
 	@echo "  src/tools/     - Agent tools"
 	@echo "  src/webhook/   - WhatsApp integration"
 	@echo "  data/          - Car catalog data"

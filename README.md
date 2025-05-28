@@ -1,152 +1,171 @@
 # Kavak AI Sales Agent
 
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.95.0-009688.svg)](https://fastapi.tiangolo.com/)
+[![LangChain](https://img.shields.io/badge/LangChain-0.0.200-FF6B6B.svg)](https://python.langchain.com/)
+[![Docker](https://img.shields.io/badge/Docker-20.10.0-2496ED.svg)](https://www.docker.com/)
+
 An intelligent sales agent for Kavak Mexico that operates via WhatsApp, capable of recommending cars, calculating financing, and answering questions about Kavak's services.
 
-## Technical Overview
+An intelligent sales agent for Kavak Mexico that operates via WhatsApp, capable of recommending cars, calculating financing, and answering questions about Kavak's services.
 
-This project is built using:
+## 🛠 Technical Stack
 
-- **FastAPI**: High-performance web framework for building APIs
-- **LangChain**: Framework for developing applications powered by language models
-- **OpenAI GPT-4o**: Advanced language model for natural language understanding and generation
-- **Twilio API**: For WhatsApp integration
-- **Pandas**: For data manipulation and analysis
-- **Docker**: Containerization for consistent development and deployment
+### Core Technologies
+- **FastAPI** - High-performance web framework for building APIs
+- **LangChain** - Framework for developing applications powered by language models
+- **OpenAI GPT-4o** - Advanced language model for natural language understanding
+- **ChromaDB** - Vector database for efficient similarity search
+- **Redis** - In-memory data store for conversation memory
+- **Docker** - Containerization for consistent development and deployment
+- **Twilio** - WhatsApp integration for customer interactions
 
-## Disclaimer
+## Key Features
 
-⚠️ **Important**: This is an independent project and is not affiliated with, endorsed by, or connected to Kavak in any way. It's a demonstration project only.
+### Car Search & Recommendations
+- Search vehicles by budget, make, model, or features
+- Get personalized recommendations based on user preferences
+- View detailed specifications and pricing
 
-## Features
+### Financing Tools
+- Calculate monthly payments with different down payment options
+- Compare financing terms (3-6 years)
+- Get detailed amortization schedules
+- Budget planning based on desired monthly payment
 
-- **Car Search**: Intelligent search by budget, brand, and preferences
-- **Financing Calculator**: Payment plans with 10% annual rate (3-6 years)
-- **Kavak Information**: Warranties, purchase process, and services
-- **WhatsApp Integration**: Live chat via Twilio
-- **Spanish Processing**: 100% Mexican Spanish agent
-- **Conversational Memory**: Maintains context throughout the conversation
+### Kavak Information
+- Learn about Kavak's warranty and certification process
+- Understand the vehicle inspection and delivery process
+- Get answers to frequently asked questions
 
-## Quick Start (5 minutes)
+### WhatsApp Integration
+- Native Spanish language support (Mexican dialect)
+- Context-aware conversations
+- Rich media support (images, documents)
+
+### Developer Experience
+- Comprehensive logging system
+- Local development with Docker
+- Automated testing suite
+- API documentation with Swagger UI
+
+## ⚠️ Disclaimer
+
+**Important**: This is an independent project and is not affiliated with, endorsed by, or connected to Kavak in any way. It's a demonstration project only.
+
+## Quick Start
 
 ### Prerequisites
-- Python 3.11+
-- UV package manager
+- Docker and Docker Compose
+- Python 3.11+ (for local development)
+- [UV](https://github.com/astral-sh/uv) package manager
 - OpenAI API key
-- Twilio account (free sandbox)
-
-### Quick Start Script
-
-The project includes a `start.sh` script that will guide you through the setup process:
-
-```bash
-# Make the script executable (first time only)
-chmod +x start.sh
-
-# Run the script
-./start.sh
-```
-
-This script will check for required dependencies and show you the next steps to configure and run the project.
+- Twilio account (for WhatsApp integration)
+- ngrok account (for local development with WhatsApp)
 
 ### Installation
 
 1. **Clone the repository**
-```bash
-git clone <repository-url>
-cd commercial_agent
-```
+   ```bash
+   git clone <repository-url>
+   cd commercial_agent
+   ```
 
-2. **Initial setup**
-```bash
-make setup
-```
-
-3. **Configure environment variables**
-   Copy the example environment file and update it with your credentials:
+2. **Set up environment variables**
    ```bash
    cp .env.example .env
    ```
-   
-   Then edit the `.env` file with your actual credentials. The file should contain the following variables:
+   Edit `.env` with your API keys and configuration:
    ```bash
    # API Keys
    OPENAI_API_KEY=your_openai_key_here
    TWILIO_ACCOUNT_SID=your_twilio_sid
    TWILIO_AUTH_TOKEN=your_twilio_token
-
-   # Optional for local webhooks
+   TWILIO_PHONE_NUMBER=your_twilio_whatsapp_number
+   
+   # Optional for local development
    NGROK_AUTHTOKEN=your_ngrok_token
    ```
 
-4. **Start the application (with Docker Compose)**
-
-#### Option 1: Use Docker Compose (recommended)
-
-You can launch all required services using Docker Compose. This includes FastAPI, Redis, ChromaDB, and (optionally) an ngrok instance to expose the WhatsApp webhook.
-
-**Requirements:**
-- Docker and Docker Compose installed
-- A free ngrok account ([sign up here](https://dashboard.ngrok.com/signup))
-    - After signing up, copy your authentication token from [here](https://dashboard.ngrok.com/get-started/your-authtoken)
-    - Add your token to your `.env` file as: `NGROK_AUTHTOKEN=your_token_here`
-
-**Mode 1: You already have a public ngrok URL (or use another tunnel)**
-
-1. Start the main services (without ngrok):
+3. **Start the services**
    ```bash
-   docker-compose up -d redis chromadb kavak-api
-   ```
-2. Expose your local API with your own tunnel (ngrok, Cloudflare Tunnel, etc.) and get the public URL.
-3. Set up the webhook in Twilio (see below).
-
-**Mode 2: Use the development profile to run ngrok automatically**
-
-1. Start all services, including ngrok:
-   ```bash
+   # Start all services including ngrok
    docker-compose --profile dev up -d
+   
+   # Or start just the core services
+   # docker-compose up -d
    ```
-2. Get the public URL generated by ngrok:
+
+4. **Get the webhook URL** (if using ngrok)
    ```bash
    docker-compose logs -f ngrok-url
    ```
-   You will see something like:
-   ```
-   =========================================
-      URL de ngrok para el webhook de Twilio:
-      https://xxxx-xxxx-xxxx.ngrok-free.app/webhook/whatsapp
-   =========================================
-   ```
-3. Copy that URL.
+   Copy the webhook URL (e.g., `https://xxxx-xxxx-xxxx.ngrok-free.app/webhook/whatsapp`)
 
-**Set up the webhook in Twilio Sandbox**
-- Go to [Twilio Console WhatsApp Sandbox](https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn)
-- In the **"When a message comes in"** field, paste the URL you copied (for example: `https://xxxx-xxxx-xxxx.ngrok-free.app/webhook/whatsapp`)
-- Done! Messages sent to your sandbox number will be routed to the agent.
+5. **Configure Twilio Webhook**
+   - Go to [Twilio Console WhatsApp Sandbox](https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn)
+   - Set the webhook URL in the "When a message comes in" field
+   - Save changes
 
----
+### Development Commands
 
-All set! The agent will be available at `http://localhost:8000` (local) and via WhatsApp through Twilio Sandbox.
+```bash
+# Install/update dependencies
+make install-deps
 
-## Usage and Demo
+# Format code
+make format
 
-### Example Conversations
+# Run linters
+make lint
 
-**Búsqueda de Auto:**
+# Run tests
+make test
+
+# Run specific test
+make test-tools
+
+# Run demo scenarios
+make demo
+
+# View logs in real-time
+make logs
+
+# Clean temporary files
+make clean
 ```
-Usuario: Hola, estoy buscando un auto seminuevo
-Agente: ¡Hola! Soy tu asesor de ventas de Kavak. ¿Cuál es tu presupuesto?
-Usuario: Alrededor de $300,000 MXN
-Agente: ¡Perfecto! Tengo 15 opciones que podrían interesarte en ese rango de precio...
+
+## Example Usage
+
+### Car Search
+```
+Usuario: Busco una camioneta familiar
+Agente: ¡Hola! ¿Tienes alguna preferencia de marca o presupuesto?
+Usuario: Máximo $500,000 MXN
+Agente: Excelente, tengo varias opciones de SUV familiares en ese rango...
 ```
 
-**Cálculo de Financiamiento:**
+### Financing Calculation
 ```
-Usuario: ¿Cuánto pagaría mensualmente por un auto de $280,000 MXN?
-Agente: Plan de Financiamiento:
-Precio: $280,000 MXN
-Enganche (20%): $56,000 MXN
-Pago mensual: $5,690 MXN (48 meses)
-Tasa de interés: 10% anual
+Usuario: ¿Cuánto pagaría por un auto de $350,000 con 20% de enganche a 5 años?
+Agente: 💰 **Plan de Financiamiento**
+
+🚗 Precio: $350,000.00
+💵 Enganche (20%): $70,000.00
+📊 Monto a financiar: $280,000.00
+
+⏱️ Plazo: 5 años (60 meses)
+📅 Pago mensual: $5,947.42
+💳 Total a pagar: $356,845.20
+📈 Intereses: $76,845.20
+
+✅ Tasa de interés: 10% anual
+```
+
+### Budget Planning
+```
+Usuario: Quiero pagar máximo $8,000 al mes
+Agente: Con un pago de $8,000 mensuales, podrías considerar estos vehículos...
 ```
 
 ### Demo Commands
@@ -164,19 +183,29 @@ make logs         # View application logs
 - **OpenAI GPT-4o**: Main language model
 - **Pandas**: Car catalog processing
 - **Twilio**: WhatsApp integration
+- **ChromaDB**: Vector database for RAG (with dynamic fallback to base knowledge)
+- **Redis**: Conversation memory storage
 
 ### Data Flow
 ```
 WhatsApp User → Twilio → FastAPI → AI Agent → Tools → Response → WhatsApp
 ```
 
-### Agent Tools
-1. **search_cars_by_budget**: Search by price range
-2. **search_specific_car**: Search by specific make/model
-3. **calculate_financing**: Monthly payment calculations
-4. **kavak_information**: Company information
-5. **schedule_appointment**: Appointment scheduling
-6. **compare_with_competition**: Kavak advantages
+## Agent Tools
+
+### Car Search Tools
+- `search_cars_by_budget`: Find vehicles within a specific price range
+- `search_specific_car`: Search by make, model, or features
+- `get_popular_cars`: Get a list of popular car models
+
+### Financing Tools
+- `calculate_financing`: Calculate monthly payments with various terms
+- `calculate_multiple_options`: View different financing scenarios with varying terms
+- `calculate_budget_by_monthly_payment`: Determine maximum car price based on monthly budget
+
+### Information & Appointment Tools
+- `get_kavak_info`: Answer questions about Kavak's services and policies
+- `schedule_appointment`: Schedule a test drive or sales consultation
 
 ## Data
 
@@ -184,35 +213,93 @@ The system uses `sample_caso_ai_engineer.csv` with 100 sample vehicles including
 - Make, model, year, version
 - Price, mileage, dimensions
 - Features (Bluetooth, CarPlay)
+- Dimensions
 
 ## Development
 
 ### Project Structure
-```text
+```
 .
-├── .github/              # GitHub workflows and templates
-├── data/                  # Data files and datasets
-│   └── sample_cars.csv    # Sample car inventory
-├── docs/                  # Documentation
-├── src/                   # Source code
-│   ├── agent/             # AI agent implementation
-│   │   ├── kavak_agent.py # Main agent class
-│   │   └── prompts.py     # System prompts and templates
-│   ├── models/            # Data models and schemas
-│   ├── services/          # Business logic services
-│   ├── tools/             # Agent tools
-│   │   ├── car_search.py  # Car search functionality
-│   │   ├── financing.py   # Payment calculations
-│   │   └── kavak_info.py  # Company information
-│   └── webhook/           # Webhook handlers
-│       └── twilio.py      # Twilio integration
-├── tests/                 # Test suite
-├── .env.example           # Environment variables template
-├── docker-compose.yml     # Docker Compose configuration
-├── Dockerfile             # Docker configuration
-├── Makefile               # Common tasks and commands
-├── pyproject.toml         # Project dependencies and metadata
-└── README.md              # This file
+├── data/                    # Data files and datasets
+│   ├── chroma_db/           # Vector database storage (ChromaDB)
+│   └── logs/                # Application logs
+├── scripts/                 # Utility and setup scripts
+│   ├── demo_test.py         # Demo scenarios for testing
+│   ├── scrape_kavak.py      # Web scraping utility
+│   └── setup_knowledge_base.py  # Knowledge base initialization
+├── src/                     # Source code
+│   ├── agent/               # AI agent implementation
+│   │   ├── kavak_agent.py   # Main agent class
+│   │   └── prompts.py       # Agent prompts and system messages
+│   ├── core/                # Core functionality
+│   │   ├── config.py        # Application configuration
+│   │   ├── exceptions.py    # Custom exceptions
+│   │   ├── logging.py       # Logging configuration
+│   │   └── middleware.py    # FastAPI middleware
+│   ├── knowledge/           # Knowledge base management
+│   │   ├── kavak_knowledge.py  # Knowledge base implementation
+│   │   └── vector_store.py  # Vector store utilities
+│   ├── models/              # Database models
+│   ├── schemas/             # Pydantic schemas
+│   ├── tools/               # Agent tools
+│   │   ├── car_search.py    # Car search functionality
+│   │   ├── financing.py     # Financing calculations
+│   │   └── kavak_info.py    # Kavak information tools
+│   ├── webhook/             # Webhook handlers
+│   │   ├── twilio_handler.py # Twilio integration
+│   │   └── response_formatter.py
+│   ├── config.py            # Application settings
+│   └── main.py              # FastAPI application entry point
+├── tests/                   # Test suite
+│   └── test_basic.py        # Basic functionality tests
+├── .env.example            # Environment variables template
+├── .gitignore              # Git ignore rules
+├── Makefile                # Common tasks and commands
+├── README.md               # Project documentation
+├── docker-compose.yml      # Docker Compose configuration
+├── pyproject.toml          # Project metadata and dependencies
+└── uv.lock                # Dependency lock file
+```
+
+### Logging
+
+Logs are written to `logs/kavak_agent.log` with rotation (10MB per file, keeping 3 backups). Log levels can be configured in `.env`:
+
+```bash
+# Logging configuration
+LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+LOG_FORMAT="%(asctime)s - %(name)s - %(levelname)s - %(message)s [%(filename)s:%(lineno)d]"
+```
+
+### Local Development
+
+1. **Start services**
+```bash
+docker-compose up -d
+```
+
+- 1.1 **Start services with ngrok**
+```bash
+docker-compose --profile dev up -d
+```
+
+2. **Run tests**
+```bash
+make test
+```
+
+3. **View logs**
+```bash
+tail -f logs/kavak_agent.log
+```
+- 3.1 **View logs in real-time**
+```bash
+make logs
+```
+
+4. **Access API documentation**
+```
+http://localhost:8000/docs
 ```
 
 ### Development Commands
@@ -234,17 +321,29 @@ make clean          # Clean temporary files
 
 ### Running Tests
 ```bash
-make test           # Run all tests
-make test-tools     # Test tools only
-make demo           # Run demo scenarios
+# Run all tests
+make test
+
+# Test tools only
+make test-tools
+
+# Run demo scenarios
+make demo
+
+# Run with coverage report
+make test-cov
 ```
 
-### WhatsApp Integration Testing
-1. Configure Twilio webhook: `https://your-ngrok-url.ngrok.io/webhook/whatsapp`
-2. Send message to Twilio sandbox number
-3. Verify agent response
+### Testing WhatsApp Integration
+1. Ensure the application is running with the webhook configured
+2. Send a message to your Twilio sandbox number
+3. Verify the agent's response in the logs:
+   ```bash
+   make logs
+   ```
+4. Check the API documentation at `http://localhost:8000/docs` for manual testing
 
-## Deployment
+## Development
 
 ### Local Development
 ```bash
@@ -253,7 +352,7 @@ make dev  # Local server with auto-reload
 
 ### Docker
 ```bash
-docker-compose --profile full up -d  # With Redis and ChromaDB
+docker-compose --profile dev up -d  # With Redis, ChromaDB and ngrok
 ```
 
 ## WhatsApp Setup

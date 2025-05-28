@@ -49,8 +49,9 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     }
 
     # Log the error with context
-    logger.opt(exception=exc).error(
-        f"Unhandled exception: {str(exc) or type(exc).__name__}", **error_context
+    logger.error(
+        f"Unhandled exception: {str(exc) or type(exc).__name__} - Context: {error_context}",
+        exc_info=True,
     )
 
     # Return generic error response

@@ -20,8 +20,9 @@ RUN pip install --no-cache-dir -e . debugpy
 COPY src/ ./src/
 COPY data/ ./data/
 
-# Create logs directory
-RUN mkdir -p /app/logs /app/data/logs
+# Create logs directory with proper permissions
+RUN mkdir -p /app/logs /app/data/logs && \
+    chmod -R 777 /app/logs /app/data/logs
 
 # Set environment variables
 ENV PYTHONPATH=/app/src \

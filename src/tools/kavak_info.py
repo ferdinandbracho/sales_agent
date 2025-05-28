@@ -6,11 +6,13 @@ warranties, and value proposition in Mexican Spanish.
 """
 
 from langchain.tools import tool
-from ..config import settings
-from ..knowledge.kavak_knowledge import get_kavak_knowledge_base
-import logging
 
-logger = logging.getLogger(__name__)
+from ..config import settings
+from ..core.logging import get_logger
+from ..knowledge.kavak_knowledge import get_kavak_knowledge_base
+
+logger = get_logger(__name__)
+
 
 @tool
 def get_kavak_info(query: str) -> str:
@@ -27,29 +29,33 @@ def get_kavak_info(query: str) -> str:
     try:
         kb = get_kavak_knowledge_base()
         if not kb or not kb.is_ready:
-            logger.warning(f"KavakKnowledgeBase not ready or not available in get_kavak_info. Status: {kb.initialization_error if kb else 'KB is None'}")
-            # Devolvemos cadena vacía para que el agente use su conocimiento pretrained y los system prompts
+            logger.warning(
+                f"KavakKnowledgeBase not ready or not available in get_kavak_info. Status: {kb.initialization_error if kb else 'KB is None'}"
+            )
+            # Return an empty string to signal that no specific info was found by RAG.
             return ""
 
         # Obtain information from the knowledge base using search_knowledge
-        # search_knowledge returns a list of dicts, e.g., [{'content': '...', 'metadata': {...}}, ...]
-        search_results = kb.search_knowledge(query=query, top_k=1) # Fetch top 1 for now, can be adjusted
+        search_results = kb.search_knowledge(
+            query=query, top_k=1
+        )  # Fetch top 1 for now, can be adjusted
 
         if not search_results:
             # Return an empty string to signal that no specific info was found by RAG.
             # The agent will then attempt to answer using its general system prompt knowledge.
-            logger.info(f"No specific RAG results for query: '{query}'. Returning empty string to agent.")
+            logger.info(
+                f"No specific RAG results for query: '{query}'. Returning empty string to agent."
+            )
             return ""
 
         # Combine content from results into a single string
-        # Assuming each result dict has a 'content' key, which is typical for RAG output
         # If search_knowledge structures results differently, this needs adjustment.
-        # For now, let's assume it returns a list of strings directly as per previous structure of 'results'
-        # If search_results is List[Dict] with 'content':
-        combined_content = "\n\n".join([res.get("content", "") for res in search_results if res.get("content")])
-        
+        combined_content = "\n\n".join(
+            [res.get("content", "") for res in search_results if res.get("content")]
+        )
+
         if not combined_content.strip():
-             return "🤔 Encontré información relacionada, pero no un texto claro para mostrar. ¿Puedes intentar otra pregunta?"
+            return "🤔 Encontré información relacionada, pero no un texto claro para mostrar. ¿Puedes intentar otra pregunta?"
 
         # Ensure the response does not exceed the character limit
         max_length = (
@@ -70,7 +76,7 @@ def get_kavak_info(query: str) -> str:
         return results_string
 
     except Exception as e:
-        print(f"[ERROR] Error en get_kavak_info: {str(e)}")
+        logger.error(f"Error en get_kavak_info: {str(e)}")
         return "⚠️ ¡Ups! Hubo un problema al buscar la información. Por favor, inténtalo de nuevo en un momento. Si el problema persiste, no dudes en contactar a nuestro equipo de soporte."
 
 
@@ -84,7 +90,7 @@ def schedule_appointment() -> str:
     """
     return """📅 **¡Agenda tu Cita en Kavak!** 🚗
 
-    ¡Perfecto! Uno de nuestros asesores se pondrá en contacto contigo a la brevedad para ayudarte a agendar tu cita. 
+    ¡Perfecto! Uno de nuestros asesores se pondrá en contacto contigo a la brevedad para ayudarte a agendar tu cita.
 
     📋 **Por favor ten a la mano:**
     • Identificación oficial (INE/IFE)

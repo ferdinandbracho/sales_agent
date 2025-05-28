@@ -2,7 +2,6 @@
 Kavak AI Sales Agent - Core Agent Implementation
 """
 
-import logging
 from typing import Any, Dict, List, Optional
 
 from langchain.agents import AgentExecutor, create_openai_tools_agent
@@ -11,30 +10,31 @@ from langchain.schema import AIMessage, BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 
 from ..config import MEXICAN_CONFIG, SPANISH_ERROR_RESPONSES, settings
+from ..core.logging import get_logger
 from .prompts import KAVAK_SYSTEM_PROMPT, MEXICAN_SALES_PERSONA
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class KavakSalesAgent:
     """
-    Agente comercial de IA para Kavak México
-    Maneja conversaciones en español y utiliza herramientas específicas
+    Commercial Agent for Kavak Mexico
+    Handles conversations in Spanish and uses specific tools
     """
 
     def __init__(self, tools: List[Any]):
         """
-        Inicializa el agente con herramientas específicas de Kavak
+        Initializes the agent with Kavak-specific tools
 
         Args:
-            tools: Lista de herramientas disponibles para el agente
+            tools: List of tools available to the agent
         """
         self.tools = tools
         self.llm = self._setup_llm()
         self.agent_executor = self._create_agent()
 
     def _setup_llm(self) -> ChatOpenAI:
-        """Configura el modelo de lenguaje"""
+        """Sets up the language model"""
         return ChatOpenAI(
             model=settings.openai.OPENAI_MODEL,
             temperature=0.7,  # Slightly creative for sales conversations
@@ -43,7 +43,7 @@ class KavakSalesAgent:
         )
 
     def _create_agent(self) -> AgentExecutor:
-        """Crea el ejecutor del agente con herramientas"""
+        """Creates the agent executor with tools"""
 
         # Create prompt template with Mexican Spanish persona
         prompt = ChatPromptTemplate.from_messages(
@@ -75,32 +75,30 @@ class KavakSalesAgent:
         conversation_history: Optional[List[Dict]] = None,
     ) -> str:
         """
-        Procesa un mensaje del usuario y genera respuesta
+        Processes a user message and generates a response
 
         Args:
-            message: Mensaje del usuario
-            session_id: ID de la sesión de conversación
-            conversation_history: Historial de conversación
+            message: User message
+            session_id: Conversation session ID
+            conversation_history: Conversation history
 
         Returns:
-            Respuesta del agente optimizada para WhatsApp
+            Optimized agent response for WhatsApp
         """
-        logger.info(f"🔍 Procesando mensaje: {message}")
+        logger.info(f"Processing message: {message}")
 
         try:
             # Build conversation history
-            logger.info("📚 Construyendo historial de conversación...")
+            logger.info("Building conversation history...")
             chat_history_for_agent = self._build_chat_history(conversation_history)
-            logger.debug(
-                f"📜 Historial de conversación para agente: {chat_history_for_agent}"
-            )
+            logger.debug(f"Conversation history for agent: {chat_history_for_agent}")
 
             # Process with agent
-            logger.info("🤖 Invocando al agente principal...")
+            logger.info("Invoking main agent...")
             agent_executor_response = await self.agent_executor.ainvoke(
                 {"input": message, "chat_history": chat_history_for_agent}
             )
-            logger.debug(f"📦 Respuesta cruda del agente: {agent_executor_response}")
+            logger.debug(f"Raw agent response: {agent_executor_response}")
 
             agent_final_output = agent_executor_response.get("output", "")
 
@@ -117,7 +115,7 @@ class KavakSalesAgent:
                         and observation == ""
                     ):
                         logger.info(
-                            "🛠️ Herramienta 'get_kavak_info' fue llamada y no devolvió resultados específicos (RAG). "
+                            "Tool 'get_kavak_info' was called and did not return specific results (RAG)."
                         )
                         rag_tool_returned_empty = True
                         break
@@ -126,8 +124,8 @@ class KavakSalesAgent:
                 not agent_final_output or not agent_final_output.strip()
             ):
                 logger.warning(
-                    "RAG no encontró información específica y el agente generó una respuesta vacía. "
-                    "Intentando respuesta directa con LLM y prompt de sistema."
+                    "RAG did not find specific information and the agent generated an empty response. "
+                    "Attempting direct response with LLM and system prompt."
                 )
 
                 # Construct a simpler prompt for direct LLM call
@@ -147,44 +145,42 @@ class KavakSalesAgent:
                     llm_response_obj.content if llm_response_obj else ""
                 )
                 logger.info(
-                    f"💬 Respuesta directa del LLM (fallback RAG): {agent_final_output[:100]}..."
+                    f"Direct LLM response (fallback RAG): {agent_final_output[:100]}..."
                 )
 
             # Validate final response (either from agent or direct LLM call)
             if not agent_final_output or not agent_final_output.strip():
-                logger.error(
-                    "❌ El agente (o el LLM de respaldo) devolvió una respuesta vacía."
-                )
+                logger.error("The agent (or fallback LLM) returned an empty response.")
                 return SPANISH_ERROR_RESPONSES["empty_response"]
 
             # Optimize response for WhatsApp
-            logger.info("✨ Optimizando respuesta para WhatsApp...")
+            logger.info("Optimizing response for WhatsApp...")
             optimized_response = self._optimize_for_whatsapp(agent_final_output)
 
             logger.info(
-                f"✅ Respuesta final: {optimized_response[:200]}..."
+                f"Final response: {optimized_response[:200]}..."
                 if len(optimized_response) > 200
-                else f"✅ Respuesta final: {optimized_response}"
+                else f"Final response: {optimized_response}"
             )
             return optimized_response
 
         except Exception as e:
-            logger.error(f"❌ Error procesando mensaje: {str(e)}", exc_info=True)
-            logger.error(f"🔧 Tipo de error: {type(e).__name__}")
+            logger.error(f"Error processing message: {str(e)}", exc_info=True)
+            logger.error(f"Error type: {type(e).__name__}")
 
             # Log the full error for debugging
             import traceback
 
-            logger.error(f"📜 Stack trace: {traceback.format_exc()}")
+            logger.error(f"Stack trace: {traceback.format_exc()}")
 
             fallback = self._get_fallback_response(message)
-            logger.warning(f"🔄 Usando respuesta de respaldo: {fallback[:200]}...")
+            logger.warning(f"Using fallback response: {fallback[:200]}...")
             return fallback
 
     def _build_chat_history(
         self, conversation_history: Optional[List[Dict]]
     ) -> List[BaseMessage]:
-        """Convierte historial a formato de LangChain"""
+        """Converts conversation history to LangChain format"""
         if not conversation_history:
             return []
 
@@ -199,10 +195,10 @@ class KavakSalesAgent:
 
     def _optimize_for_whatsapp(self, response: str) -> str:
         """
-        Optimiza la respuesta para WhatsApp
-        - Límite de caracteres
-        - Emojis mexicanos
-        - Formato móvil
+        Optimizes the response for WhatsApp
+        - Character limit
+        - Mexican emojis
+        - Mobile format
         """
         # Truncate if too long (using settings.RESPONSE_MAX_LENGTH instead of settings.response_max_length)
         if len(response) > settings.RESPONSE_MAX_LENGTH:
@@ -218,7 +214,7 @@ class KavakSalesAgent:
         return response
 
     def _add_contextual_emoji(self, response: str) -> str:
-        """Agrega emojis contextuales mexicanos"""
+        """Adds contextual Mexican emojis"""
         emojis = MEXICAN_CONFIG["emojis"]
 
         if any(word in response.lower() for word in ["auto", "carro", "vehículo"]):
@@ -234,8 +230,8 @@ class KavakSalesAgent:
 
     def _get_fallback_response(self, original_message: str) -> str:
         """
-        Respuesta de emergencia cuando el agente falla
-        Siempre en español mexicano
+        Emergency response when the agent fails
+        Always in Mexican Spanish
         """
         fallback_responses = [
             f"¡Hola! Soy tu agente de Kavak {MEXICAN_CONFIG['emojis']['car']}\n\nTe puedo ayudar con:\n• Encontrar tu auto ideal\n• Calcular financiamiento {MEXICAN_CONFIG['emojis']['money']}\n• Info sobre garantías\n• Agendar cita de prueba\n\n¿Qué necesitas?",
@@ -253,5 +249,5 @@ class KavakSalesAgent:
 
 
 def create_kavak_agent(tools: List[Any]) -> KavakSalesAgent:
-    """Factory function para crear el agente de Kavak"""
+    """Factory function to create the Kavak agent"""
     return KavakSalesAgent(tools)

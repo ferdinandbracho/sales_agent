@@ -56,8 +56,9 @@ services:
       - PYTHONUNBUFFERED=1
       - PYTHONBREAKPOINT=debugpy.breakpoint
     volumes:
-      - ./src:/app/src  # Mount source for development (not read-only)
+      - ./src:/app/src
       - ./data:/app/data
+      - ./logs:/app/logs
     depends_on:
       redis:
         condition: service_healthy
@@ -77,8 +78,6 @@ services:
       retries: 3
     networks:
       - kavak-network
-    profiles:
-      - dev
 
   # ngrok for webhook tunneling (development only)
   ngrok:

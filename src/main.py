@@ -14,13 +14,13 @@ from src.core.exceptions import setup_exception_handlers
 # Initialize logging
 from src.core.logging import get_logger, setup_logging
 from src.core.middleware import setup_middleware
+
+# Import knowledge base initializer
+from src.knowledge.kavak_knowledge import initialize_global_kavak_kb
 from src.schemas.responses import HealthCheckResponse, HealthStatus, RootResponse
 
 # Import routes and schemas
 from src.webhook.twilio_handler import router as webhook_router
-
-# Import knowledge base initializer
-from src.knowledge.kavak_knowledge import initialize_global_kavak_kb
 
 # Configure logging using settings from config
 setup_logging()
@@ -28,6 +28,7 @@ setup_logging()
 # Get logger for this module
 logger = get_logger(__name__)
 logger.info("Starting application...")
+
 
 # Lifespan Management
 @asynccontextmanager
@@ -40,6 +41,7 @@ async def lifespan(app_instance: FastAPI):
     # Shutdown (if any cleanup needed in the future)
     logger.info("Application shutdown.")
 
+
 # Create FastAPI app
 app = FastAPI(
     title="Kavak AI Sales Agent",
@@ -48,7 +50,20 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    contact={
+        "name": "Ferdinand Bracho",
+        "email": "ferdinand.bracho@gmail.com",
+        "url": "https://github.com/ferdinandbracho",
+    },
+    license_info={
+        "name": "MIT License",
+        "url": "https://github.com/ferdinandbracho/kavak_challenge/blob/main/LICENSE",
+    },
     openapi_tags=[
+        {
+            "name": "Root",
+            "description": "Root endpoint",
+        },
         {
             "name": "WhatsApp",
             "description": "Endpoints for WhatsApp integration",
@@ -57,8 +72,16 @@ app = FastAPI(
             "name": "Health",
             "description": "Endpoints for monitoring and service status",
         },
+        {
+            "name": "Testing",
+            "description": "Endpoints for testing the agent",
+        },
+        {
+            "name": "Conversations",
+            "description": "Endpoints for managing conversation history",
+        },
     ],
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Setup middlewares and exception handlers

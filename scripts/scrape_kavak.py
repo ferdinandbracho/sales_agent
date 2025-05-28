@@ -4,15 +4,19 @@ Kavak Website Scraper
 
 import requests
 from bs4 import BeautifulSoup
-import json
-import time
 from typing import Dict, List, Optional
-import logging
+import json
 import os
+import time
 
 # Configure logging
+import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Path to save scraped content
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+DEFAULT_KNOWLEDGE_FILE = os.path.join(DATA_DIR, "kavak_knowledge.json")
 
 
 class KavakWebScraper:
@@ -195,7 +199,7 @@ class KavakWebScraper:
 
         return metadata
 
-    def save_content(self, filename: str = "data/kavak_knowledge.json") -> None:
+    def save_content(self, filename: str = DEFAULT_KNOWLEDGE_FILE) -> None:
         """
         Save scraped content to JSON file
 

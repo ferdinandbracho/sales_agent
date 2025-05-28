@@ -1,269 +1,350 @@
 """
 Financing Tool
-"""
 
-import math
-from typing import Dict, List, Optional
+This module provides tools for calculating car financing options with Kavak.
+"""
 
 from langchain.tools import tool
 
-from ..config import MEXICAN_CONFIG
+from src.core.logging import get_logger
+
+# Initialize logger
+logger = get_logger(__name__)
 
 
 @tool
-def calcular_financiamiento(precio_auto: float, enganche: float, anos: int = 4) -> str:
+def calculate_financing(car_price: float, down_payment: float, years: int = 4) -> str:
     """
-    Calcula el financiamiento para un auto con tasa del 10% anual.
+    Calculates car financing with a 10% annual interest rate.
+
+    The response will be in Spanish to match the user's language.
 
     Args:
-        precio_auto: Precio total del vehículo en pesos
-        enganche: Monto del enganche en pesos
-        anos: Años de financiamiento (3-6 años disponibles)
+        car_price: Total vehicle price in MXN
+        down_payment: Down payment amount in MXN
+        years: Financing term in years (3-6 years available)
 
     Returns:
-        Plan de financiamiento detallado en español
+        Detailed financing plan in Spanish
     """
+    logger.info(
+        "Calculating financing",
+        extra={
+            "car_price": car_price,
+            "down_payment": down_payment,
+            "years": years,
+        },
+    )
+
     try:
         # Validate inputs
-        if precio_auto <= 0:
-            return "❌ El precio del auto debe ser mayor a $0. ¿Puedes verificar?"
+        if car_price <= 0:
+            error_msg = "El precio del auto debe ser mayor a $0"
+            logger.warning(error_msg, extra={"car_price": car_price})
+            return f"❌ {error_msg}. ¿Puedes verificar?"
 
-        if enganche < 0 or enganche >= precio_auto:
-            return "❌ El enganche debe ser entre $0 y menor al precio del auto. ¿Puedes verificar?"
+        if down_payment < 0 or down_payment >= car_price:
+            error_msg = "El enganche debe ser entre $0 y menor al precio del auto"
+            logger.warning(
+                error_msg, extra={"down_payment": down_payment, "car_price": car_price}
+            )
+            return f"❌ {error_msg}. ¿Puedes verificar?"
 
-        if anos not in [3, 4, 5, 6]:
-            return "❌ Los plazos disponibles son: 3, 4, 5 o 6 años. ¿Cuál prefieres?"
+        if years not in [3, 4, 5, 6]:
+            error_msg = f"Plazo no válido: {years}. Los plazos disponibles son: 3, 4, 5 o 6 años"
+            logger.warning(error_msg)
+            return f"❌ {error_msg}. ¿Cuál prefieres?"
 
         # Calculate financing
-        monto_financiar = precio_auto - enganche
-        tasa_anual = 0.10  # 10% as specified
-        tasa_mensual = tasa_anual / 12
-        meses = anos * 12
+        amount_to_financier = car_price - down_payment
+        annual_interest_rate = 0.10  # 10% as specified
+        monthly_interest_rate = annual_interest_rate / 12
+        months = years * 12
 
-        if monto_financiar <= 0:
+        if amount_to_financier <= 0:
+            logger.info(
+                "No financing needed - down payment covers full car price",
+                extra={"down_payment": down_payment, "car_price": car_price},
+            )
             return f"""
-✅ ¡Excelente! Con un enganche de ${enganche:,.2f} pagas el auto completo.
-No necesitas financiamiento. 
+            ✅ ¡Excelente! Con un enganche de ${down_payment:,.2f} pagas el auto completo.
+            No necesitas financiamiento. 
 
-¿Te ayudo con los trámites de compra? 🚗
-"""
+            ¿Te ayudo con los trámites de compra? 🚗
+            """
 
         # Monthly payment formula
-        pago_mensual = (
-            monto_financiar
-            * (tasa_mensual * (1 + tasa_mensual) ** meses)
-            / ((1 + tasa_mensual) ** meses - 1)
+        # General formula for a fixed-rate mortgage/loan: P = (PV * r * (1 + r)^n) / ((1 + r)^n - 1)
+        monthly_payment = (
+            amount_to_financier
+            * (monthly_interest_rate * (1 + monthly_interest_rate) ** months)
+            / ((1 + monthly_interest_rate) ** months - 1)
         )
-        total_pagar = pago_mensual * meses
-        intereses_totales = total_pagar - monto_financiar
+        total_amount = monthly_payment * months
+        total_interests = total_amount - amount_to_financier
 
-        respuesta = f"""
-💰 **Plan de Financiamiento Kavak**
+        # Log successful calculation
+        logger.info(
+            "Financing calculation successful",
+            extra={
+                "monthly_payment": monthly_payment,
+                "total_amount": total_amount,
+                "total_interests": total_interests,
+                "years": years,
+            },
+        )
 
-🚗 Precio del auto: ${precio_auto:,.2f}
-💵 Enganche: ${enganche:,.2f} ({(enganche/precio_auto)*100:.1f}%)
-📊 Monto a financiar: ${monto_financiar:,.2f}
+        response = f"""
+        💰 **Plan de Financiamiento Kavak**
 
-⏱️ **Plazo: {anos} años**
-📅 Pago mensual: ${pago_mensual:,.2f}
-💳 Total a pagar: ${total_pagar:,.2f}
-📈 Intereses: ${intereses_totales:,.2f}
+        🚗 Precio del auto: ${car_price:,.2f}
+        💵 Enganche: ${down_payment:,.2f} ({(down_payment / car_price) * 100:.1f}%)
+        📊 Monto a financiar: ${amount_to_financier:,.2f}
 
-✅ Tasa de interés: 10% anual
-✅ Sin penalización por pago anticipado
-✅ Proceso 100% digital
-"""
+        ⏱️ **Plazo: {years} años**
+        📅 Pago mensual: ${monthly_payment:,.2f}
+        💳 Total a pagar: ${total_amount:,.2f}
+        📈 Intereses: ${total_interests:,.2f}
+
+        ✅ Tasa de interés: 10% anual
+        ✅ Sin penalización por pago anticipado
+        ✅ Proceso 100% digital
+        """
 
         # Add comparison with other terms
-        if anos != 4:  # Show alternative if not default
-            alt_anos = 4
-            alt_meses = alt_anos * 12
-            alt_pago = (
-                monto_financiar
-                * (tasa_mensual * (1 + tasa_mensual) ** alt_meses)
-                / ((1 + tasa_mensual) ** alt_meses - 1)
+        if years != 4:  # Show alternative if not default
+            alt_years = 4
+            alt_months = alt_years * 12
+            alt_payment = (
+                amount_to_financier
+                * (monthly_interest_rate * (1 + monthly_interest_rate) ** alt_months)
+                / ((1 + monthly_interest_rate) ** alt_months - 1)
             )
-            respuesta += f"\n💡 En {alt_anos} años serían ${alt_pago:,.2f}/mes"
+            response += f"\n💡 En {alt_years} años serían ${alt_payment:,.2f}/mes"
 
-        respuesta += (
+        response += (
             "\n\n¿Te funciona este plan? ¿Quieres ver otras opciones de enganche? 😊"
         )
 
-        return respuesta
+        return response
 
     except Exception as e:
+        logger.error(
+            "Error calculating financing",
+            exc_info=True,
+            extra={
+                "car_price": car_price,
+                "down_payment": down_payment,
+                "years": years,
+                "error": str(e),
+            },
+        )
         return f"❌ Error calculando financiamiento: {str(e)}. ¿Puedes verificar los números?"
 
 
 @tool
-def calcular_multiples_opciones(
-    precio_auto: float, porcentaje_enganche: float = 20.0
+def calculate_multiple_options(
+    car_price: float, down_payment_percentage: float = 20.0
 ) -> str:
     """
-    Calcula múltiples opciones de financiamiento para diferentes plazos.
+    Calculate multiple financing options for different terms.
 
     Args:
-        precio_auto: Precio del vehículo
-        porcentaje_enganche: Porcentaje de enganche (default 20%)
+        car_price: Vehicle price in MXN
+        down_payment_percentage: Down payment percentage (default 20%)
 
     Returns:
-        Tabla comparativa de opciones de financiamiento
+        Comparison table of financing options in Spanish
+    """
+    logger.info(
+        "Calculating multiple financing options",
+        extra={
+            "car_price": car_price,
+            "down_payment_percentage": down_payment_percentage,
+        },
+    )
+    """
+    Calculate multiple financing options for different terms.
+
+    Args:
+        car_price: Vehicle price
+        down_payment_percentage: Down payment percentage (default 20%)
+
+    Returns:
+        Comparison table of financing options
     """
     try:
-        if precio_auto <= 0:
-            return "❌ El precio debe ser mayor a $0"
+        if car_price <= 0:
+            error_msg = "El precio del auto debe ser mayor a $0"
+            logger.warning(error_msg, extra={"car_price": car_price})
+            return f"❌ {error_msg}"
 
-        if porcentaje_enganche < 0 or porcentaje_enganche > 100:
-            return "❌ El porcentaje de enganche debe estar entre 0% y 100%"
-
-        enganche = precio_auto * (porcentaje_enganche / 100)
-        monto_financiar = precio_auto - enganche
-        tasa_mensual = 0.10 / 12  # 10% anual
-
-        respuesta = f"""
-💰 **Opciones de Financiamiento Kavak**
-
-🚗 Precio: ${precio_auto:,.2f}
-💵 Enganche ({porcentaje_enganche:.0f}%): ${enganche:,.2f}
-📊 A financiar: ${monto_financiar:,.2f}
-
-**Opciones de pago:**
-"""
-
-        for anos in [3, 4, 5, 6]:
-            meses = anos * 12
-            pago_mensual = (
-                monto_financiar
-                * (tasa_mensual * (1 + tasa_mensual) ** meses)
-                / ((1 + tasa_mensual) ** meses - 1)
+        if down_payment_percentage < 0 or down_payment_percentage > 100:
+            error_msg = "El porcentaje de enganche debe estar entre 0% y 100%"
+            logger.warning(
+                error_msg, extra={"down_payment_percentage": down_payment_percentage}
             )
-            total_pagar = pago_mensual * meses
+            return f"❌ {error_msg}"
 
-            respuesta += f"""
-📅 **{anos} años:** ${pago_mensual:,.2f}/mes (Total: ${total_pagar:,.2f})
-"""
+        down_payment = car_price * (down_payment_percentage / 100)
+        amount_to_financier = car_price - down_payment
+        monthly_interest_rate = 0.10 / 12  # 10% anual
 
-        respuesta += f"""
-✅ Tasa: 10% anual fija
-✅ Sin comisiones ocultas
-✅ Aprobación en 24 horas
+        logger.info(
+            "Multiple options calculation successful",
+            extra={
+                "amount_to_financier": amount_to_financier,
+                "down_payment": down_payment,
+            },
+        )
 
-¿Cuál plazo te conviene más? 😊"""
+        response = f"""
+        💰 **Opciones de Financiamiento Kavak**
 
-        return respuesta
+        🚗 Precio: ${car_price:,.2f}
+        💵 Enganche ({down_payment_percentage:.0f}%): ${down_payment:,.2f}
+        📊 A financiar: ${amount_to_financier:,.2f}
+
+        **Opciones de pago:**
+        """
+
+        for years in [3, 4, 5, 6]:
+            months = years * 12
+            monthly_payment = (
+                amount_to_financier
+                * (monthly_interest_rate * (1 + monthly_interest_rate) ** months)
+                / ((1 + monthly_interest_rate) ** months - 1)
+            )
+            total_amount = monthly_payment * months
+
+            response += f"""
+            📅 **{years} años:** ${monthly_payment:,.2f}/mes (Total: ${total_amount:,.2f})
+            """
+
+        response += f"""
+        ✅ Tasa: 10% anual fija
+        ✅ Sin comisiones ocultas
+        ✅ Aprobación en 24 horas
+
+        ¿Cuál plazo te conviene más? 😊"""
+
+        return response
 
     except Exception as e:
+        logger.error(
+            "Error calculating multiple options",
+            exc_info=True,
+            extra={
+                "car_price": car_price,
+                "down_payment_percentage": down_payment_percentage,
+                "error": str(e),
+            },
+        )
         return f"❌ Error en cálculos: {str(e)}"
 
 
 @tool
-def calcular_presupuesto_por_mensualidad(
-    pago_mensual_deseado: float, anos: int = 4, porcentaje_enganche: float = 20.0
+def calculate_budget_by_monthly_payment(
+    monthly_payment_desired: float,
+    years: int = 4,
+    down_payment_percentage: float = 20.0,
 ) -> str:
     """
-    Calcula qué precio de auto puede permitirse con una mensualidad específica.
+    Calculate the maximum car price that can be afforded with a specific monthly payment.
 
     Args:
-        pago_mensual_deseado: Pago mensual que puede permitirse
-        anos: Años de financiamiento
-        porcentaje_enganche: Porcentaje de enganche
+        monthly_payment_desired: Monthly payment that can be afforded in MXN
+        years: Financing term in years (default: 4)
+        down_payment_percentage: Down payment percentage (default: 20%)
 
     Returns:
-        Precio máximo de auto que puede comprar
+        Maximum car price that can be afforded with the given parameters
+    """
+    logger.info(
+        "Calculating budget by monthly payment",
+        extra={
+            "monthly_payment_desired": monthly_payment_desired,
+            "years": years,
+            "down_payment_percentage": down_payment_percentage,
+        },
+    )
+    """
+    Calculate the maximum car price that can be afforded with a specific monthly payment.
+
+    Args:
+        monthly_payment_desired: Monthly payment that can be afforded
+        years: Financing term in years
+        down_payment_percentage: Down payment percentage
+
+    Returns:
+        Maximum car price that can be afforded
     """
     try:
-        if pago_mensual_deseado <= 0:
-            return "❌ El pago mensual debe ser mayor a $0"
+        if monthly_payment_desired <= 0:
+            error_msg = "El pago mensual debe ser mayor a $0"
+            logger.warning(
+                error_msg, extra={"monthly_payment_desired": monthly_payment_desired}
+            )
+            return f"❌ {error_msg}"
 
-        if anos not in [3, 4, 5, 6]:
-            return "❌ Los plazos disponibles son: 3, 4, 5 o 6 años"
+        if years not in [3, 4, 5, 6]:
+            error_msg = f"Plazo no válido: {years}. Los plazos disponibles son: 3, 4, 5 o 6 años"
+            logger.warning(error_msg, extra={"years": years})
+            return f"❌ {error_msg}"
 
-        tasa_mensual = 0.10 / 12
-        meses = anos * 12
+        monthly_interest_rate = 0.10 / 12
+        months = years * 12
 
         # Calculate maximum loan amount from desired payment
-        monto_max_financiar = (
-            pago_mensual_deseado
-            * ((1 + tasa_mensual) ** meses - 1)
-            / (tasa_mensual * (1 + tasa_mensual) ** meses)
+        max_amount_to_financier = (
+            monthly_payment_desired
+            * ((1 + monthly_interest_rate) ** months - 1)
+            / (monthly_interest_rate * (1 + monthly_interest_rate) ** months)
         )
 
         # Calculate total car price including down payment
-        precio_max_auto = monto_max_financiar / (1 - porcentaje_enganche / 100)
-        enganche_necesario = precio_max_auto * (porcentaje_enganche / 100)
+        max_car_price = max_amount_to_financier / (1 - down_payment_percentage / 100)
+        down_payment = max_car_price * (down_payment_percentage / 100)
 
-        respuesta = f"""
-🎯 **Análisis de Presupuesto**
+        logger.info(
+            "Budget calculation successful",
+            extra={
+                "max_car_price": max_car_price,
+                "down_payment": down_payment,
+                "monthly_payment_desired": monthly_payment_desired,
+                "years": years,
+            },
+        )
 
-💳 Pago mensual disponible: ${pago_mensual_deseado:,.2f}
-⏱️ Plazo: {anos} años
-💵 Enganche ({porcentaje_enganche:.0f}%): ${enganche_necesario:,.2f}
+        response = f"""
+        🎯 **Análisis de Presupuesto**
 
-🚗 **Precio máximo de auto: ${precio_max_auto:,.2f}**
+        💳 Pago mensual disponible: ${monthly_payment_desired:,.2f}
+        ⏱️ Plazo: {years} años
+        💵 Enganche ({down_payment_percentage:.0f}%): ${down_payment:,.2f}
 
-📊 Desglose:
-• Monto a financiar: ${monto_max_financiar:,.2f}
-• Enganche requerido: ${enganche_necesario:,.2f}
-• Total del auto: ${precio_max_auto:,.2f}
+        🚗 **Precio máximo de auto: ${max_car_price:,.2f}**
 
-✅ Con este presupuesto tienes excelentes opciones en Kavak.
+        📊 Desglose:
+        • Monto a financiar: ${max_amount_to_financier:,.2f}
+        • Enganche requerido: ${down_payment:,.2f}
+        • Total del auto: ${max_car_price:,.2f}
 
-¿Quieres ver autos disponibles en este rango? 🚗"""
+        ✅ Con este presupuesto tienes excelentes opciones en Kavak.
 
-        return respuesta
+        ¿Quieres ver autos disponibles en este rango? 🚗"""
 
-    except Exception as e:
-        return f"❌ Error calculando presupuesto: {str(e)}"
-
-
-@tool
-def comparar_enganche_vs_mensualidad(precio_auto: float) -> str:
-    """
-    Compara diferentes opciones de enganche y su impacto en la mensualidad.
-
-    Args:
-        precio_auto: Precio del vehículo
-
-    Returns:
-        Comparación de opciones de enganche
-    """
-    try:
-        if precio_auto <= 0:
-            return "❌ El precio debe ser mayor a $0"
-
-        tasa_mensual = 0.10 / 12
-        anos = 4  # Default term
-        meses = anos * 12
-
-        respuesta = f"""
-🔄 **Comparación de Opciones de Enganche**
-🚗 Auto: ${precio_auto:,.2f}
-
-"""
-
-        porcentajes_enganche = [10, 20, 30, 40, 50]
-
-        for porcentaje in porcentajes_enganche:
-            enganche = precio_auto * (porcentaje / 100)
-            monto_financiar = precio_auto - enganche
-
-            if monto_financiar > 0:
-                pago_mensual = (
-                    monto_financiar
-                    * (tasa_mensual * (1 + tasa_mensual) ** meses)
-                    / ((1 + tasa_mensual) ** meses - 1)
-                )
-                respuesta += f"💰 {porcentaje}% enganche: ${enganche:,.0f} → ${pago_mensual:,.0f}/mes\n"
-            else:
-                respuesta += f"💰 {porcentaje}% enganche: ${enganche:,.0f} → Auto pagado completo\n"
-
-        respuesta += f"""
-💡 **Recomendación:** 
-Mayor enganche = menor mensualidad = menos intereses totales
-
-¿Qué porcentaje de enganche te conviene más? 😊"""
-
-        return respuesta
+        return response
 
     except Exception as e:
-        return f"❌ Error en comparación: {str(e)}"
+        logger.error(
+            "Error calculating budget by monthly payment",
+            exc_info=True,
+            extra={
+                "monthly_payment_desired": monthly_payment_desired,
+                "years": years,
+                "down_payment_percentage": down_payment_percentage,
+                "error": str(e),
+            },
+        )
+        return f"❌ Error en el cálculo: {str(e)}"

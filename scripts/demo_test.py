@@ -9,8 +9,8 @@ import os
 # Add src to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
-from src.tools.car_search import buscar_autos_por_presupuesto, buscar_auto_especifico
-from src.tools.financing import calcular_financiamiento, calcular_multiples_opciones
+from src.tools.car_search import search_cars_by_budget, search_specific_car
+from src.tools.financing import calculate_financing, calculate_multiple_options
 from src.tools.kavak_info import get_kavak_info
 
 
@@ -21,18 +21,18 @@ async def demo_car_search():
 
     # Test 1: Budget search
     print("\n1. Búsqueda por presupuesto (300,000 pesos)")
-    result = buscar_autos_por_presupuesto.invoke({"presupuesto_maximo": 300000.0})
+    result = search_cars_by_budget.invoke({"max_price": 300000.0})
     print(result)
 
     # Test 2: Specific car search
     print("\n2. Búsqueda específica (Toyota Corolla)")
-    result = buscar_auto_especifico.invoke({"marca": "Toyota", "modelo": "Corolla"})
+    result = search_specific_car.invoke({"brand": "Toyota", "model": "Corolla"})
     print(result)
 
     # Test 3: Brand search
     print("\n3. Búsqueda por marca (Nissan, presupuesto 250k)")
-    result = buscar_autos_por_presupuesto.invoke(
-        {"presupuesto_maximo": 250000.0, "marca": "Nissan"}
+    result = search_cars_by_budget.invoke(
+        {"max_price": 250000.0, "brand": "Nissan"}
     )
     print(result)
 
@@ -44,15 +44,15 @@ async def demo_financing():
 
     # Test 1: Basic financing calculation
     print("\n1. Financiamiento básico (Auto $300k, enganche $60k, 4 años)")
-    result = calcular_financiamiento.invoke(
-        {"precio_auto": 300000.0, "enganche": 60000.0, "anos": 4}
+    result = calculate_financing.invoke(
+        {"car_price": 300000.0, "down_payment": 60000.0, "years": 4}
     )
     print(result)
 
     # Test 2: Multiple options
     print("\n2. Múltiples opciones (Auto $250k, enganche 20%)")
-    result = calcular_multiples_opciones.invoke(
-        {"precio_auto": 250000.0, "porcentaje_enganche": 20.0}
+    result = calculate_multiple_options.invoke(
+        {"car_price": 250000.0, "down_payment_percentage": 20.0}
     )
     print(result)
 
@@ -64,17 +64,17 @@ async def demo_kavak_info():
 
     # Test 1: General info
     print("\n1. Información general sobre Kavak")
-    result = get_kavak_info.invoke({"pregunta": "¿Qué es Kavak?"})
+    result = get_kavak_info.invoke({"query": "¿Qué es Kavak?"})
     print(result)
 
     # Test 2: Warranty info
     print("\n2. Información sobre garantías")
-    result = get_kavak_info.invoke({"pregunta": "garantía"})
+    result = get_kavak_info.invoke({"query": "garantía"})
     print(result)
 
     # Test 3: Financing info
     print("\n3. Información sobre financiamiento")
-    result = get_kavak_info.invoke({"pregunta": "financiamiento"})
+    result = get_kavak_info.invoke({"query": "financiamiento"})
     print(result)
 
 
@@ -101,21 +101,21 @@ async def demo_conversation_flow():
                 "   Agente: ¡Hola! Soy tu agente de Kavak 🚗 ¿En qué te puedo ayudar?"
             )
         elif "presupuesto" in message.lower():
-            result = buscar_autos_por_presupuesto.invoke(
-                {"presupuesto_maximo": 300000.0}
+            result = search_cars_by_budget.invoke(
+                {"max_price": 300000.0}
             )
             print(f"   Agente: {result[:200]}...")
         elif "toyota" in message.lower():
-            result = buscar_auto_especifico.invoke(
-                {"marca": "Toyota", "modelo": "Corolla"}
+            result = search_specific_car.invoke(
+                {"brand": "Toyota", "model": "Corolla"}
             )
             print(f"   Agente: {result[:200]}...")
         elif "financiamiento" in message.lower():
-            result = get_kavak_info.invoke({"pregunta": "financiamiento"})
+            result = get_kavak_info.invoke({"query": "financiamiento"})
             print(f"   Agente: {result[:200]}...")
         elif "calcular" in message.lower():
-            result = calcular_financiamiento.invoke(
-                {"precio_auto": 280000.0, "enganche": 56000.0, "anos": 4}
+            result = calculate_financing.invoke(
+                {"car_price": 280000.0, "down_payment": 280000 * 0.2, "years": 4}
             )
             print(f"   Agente: {result[:200]}...")
 

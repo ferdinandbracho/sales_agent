@@ -24,7 +24,8 @@ Welcome to the Kavak AI Sales Agent project! This is an intelligent car sales ch
 7. [API Reference](#api-reference)
 8. [Development Guide](#development-guide)
 9. [Deployment](#deployment)
-10. [Future Enhancements](#future-enhancements)
+10. [Production Roadmap & Strategy](#production-roadmap--strategy)
+11. [Future Enhancements](#future-enhancements)
 
 ## Key Features
 
@@ -202,108 +203,292 @@ make clean
 * **Docker** - Containerization for consistent development and deployment
 * **Twilio** - WhatsApp integration for customer interactions
 
-## Architecture
+## System Architecture Diagram
 
 ### Core Principles
 
 The Kavak AI Sales Agent follows a Domain-Driven Design (DDD) approach with elements of Clean Architecture, organizing the codebase into distinct layers with clear responsibilities.
 
-### System Diagram
+
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        WA[WhatsApp Users]
+        TC[Test Clients]
+        DEV[Developers]
+    end
+    
+    subgraph "Interface Layer"
+        TW[Twilio Webhook Handler]
+        API[FastAPI Application]
+        DOCS[API Documentation]
+        HEALTH[Health Check]
+    end
+    
+    subgraph "Application Layer"
+        subgraph "AI Agent Core"
+            AGENT[Kavak Sales Agent]
+            EXEC[Agent Executor]
+            LLM[OpenAI GPT-4o]
+        end
+        
+        subgraph "Memory & Context"
+            MEMORY[Conversation Memory]
+            HISTORY[Chat History Manager]
+            REDIS[Redis Store]
+        end
+    end
+    
+    subgraph "Domain Layer - Business Tools"
+        subgraph "Car Search Tools"
+            SEARCH_BUDGET[Search by Budget]
+            SEARCH_SPECIFIC[Search Specific Car]
+            SEARCH_POPULAR[Popular Cars]
+        end
+        
+        subgraph "Financing Tools"
+            CALC_BASIC[Basic Financing]
+            CALC_MULTI[Multiple Options]
+            CALC_BUDGET[Budget Calculator]
+        end
+        
+        subgraph "Information Tools"
+            KAVAK_INFO[Kavak Information]
+            APPOINTMENT[Schedule Appointment]
+        end
+    end
+    
+    subgraph "Infrastructure Layer"
+        subgraph "Data Sources"
+            CSV[Car Catalog CSV]
+            KB[Knowledge Base]
+            CHROMA[ChromaDB Vector Store]
+        end
+        
+        subgraph "External Services"
+            OPENAI[OpenAI API]
+            TWILIO[Twilio Service]
+        end
+        
+        subgraph "System Services"
+            LOGGING[Logging System]
+            MONITORING[Health Monitoring]
+            DOCKER[Docker Containers]
+        end
+    end
+    
+    %% User Flow
+    WA -->|WhatsApp Messages| TW
+    TC -->|HTTP Requests| API
+    DEV -->|Development| DOCS
+    
+    %% Interface Processing
+    TW --> API
+    API --> AGENT
+    API --> HEALTH
+    
+    %% Agent Processing
+    AGENT --> EXEC
+    EXEC --> LLM
+    AGENT <--> MEMORY
+    MEMORY <--> REDIS
+    HISTORY --> REDIS
+    
+    %% Tool Execution
+    EXEC --> SEARCH_BUDGET
+    EXEC --> SEARCH_SPECIFIC
+    EXEC --> SEARCH_POPULAR
+    EXEC --> CALC_BASIC
+    EXEC --> CALC_MULTI
+    EXEC --> CALC_BUDGET
+    EXEC --> KAVAK_INFO
+    EXEC --> APPOINTMENT
+    
+    %% Data Access
+    SEARCH_BUDGET --> CSV
+    SEARCH_SPECIFIC --> CSV
+    SEARCH_POPULAR --> CSV
+    KAVAK_INFO --> KB
+    KB --> CHROMA
+    
+    %% External Services
+    LLM --> OPENAI
+    TW --> TWILIO
+    
+    %% System Services
+    AGENT --> LOGGING
+    API --> MONITORING
+    
+    %% Styling
+    classDef clientLayer fill:#e3f2fd
+    classDef interfaceLayer fill:#f3e5f5
+    classDef applicationLayer fill:#fff3e0
+    classDef domainLayer fill:#e8f5e8
+    classDef infrastructureLayer fill:#fce4ec
+    
+    class WA,TC,DEV clientLayer
+    class TW,API,DOCS,HEALTH interfaceLayer
+    class AGENT,EXEC,LLM,MEMORY,HISTORY,REDIS applicationLayer
+    class SEARCH_BUDGET,SEARCH_SPECIFIC,SEARCH_POPULAR,CALC_BASIC,CALC_MULTI,CALC_BUDGET,KAVAK_INFO,APPOINTMENT domainLayer
+    class CSV,KB,CHROMA,OPENAI,TWILIO,LOGGING,MONITORING,DOCKER infrastructureLayer
+```
+
+## Agent & Tools Architecture
+
+Add this diagram to show the AI agent's internal architecture:
 
 ```mermaid
 graph TD
-    subgraph "Client Applications"
-        WhatsApp["WhatsApp"]
-        TestClient["Test Client"]
+    subgraph "User Input"
+        USER_MSG[User Message]
     end
-
-    subgraph "Interface Layer"
-        FastAPI["FastAPI Application"]
-        subgraph "FastAPI Components"
-            TwilioWebhook["Twilio Webhook"]
-            HealthCheck["Health Check"]
-            TestRoutes["Test Routes"]
+    
+    subgraph "Prompt Engineering Pipeline"
+        SYS_PROMPT[System Prompt]
+        PERSONA[Mexican Sales Persona]
+        ANTI_HALLUC[Anti-Hallucination Rules]
+        CHAIN_VERIFY[Chain of Verification]
+        FEW_SHOT[Few-Shot Examples]
+        CONTEXT[Conversation Context]
+    end
+    
+    subgraph "Agent Decision Engine"
+        AGENT_CORE[Kavak Sales Agent]
+        LLM[OpenAI GPT-4o]
+        EXECUTOR[Agent Executor]
+    end
+    
+    subgraph "Available Tools"
+        subgraph "Search Tools"
+            T1[search_cars_by_budget]
+            T2[search_specific_car]
+            T3[get_popular_cars]
+        end
+        
+        subgraph "Finance Tools"
+            T4[calculate_financing]
+            T5[calculate_multiple_options]
+            T6[calculate_budget_by_monthly_payment]
+        end
+        
+        subgraph "Info Tools"
+            T7[get_kavak_info]
+            T8[schedule_appointment]
         end
     end
-
-    subgraph "Application Layer"
-        KavakAgent["Kavak Sales Agent"]
-        subgraph "Agent Components"
-            AgentExecutor["Agent Executor"]
-            ChatHistory["Chat History"]
-            Prompting["Prompting"]
-        end
+    
+    subgraph "Response Generation"
+        RESPONSE_GEN[Response Generator]
+        WHATSAPP_OPT[WhatsApp Optimizer]
+        EMOJI_ADD[Mexican Emojis]
+        CHAR_LIMIT[Character Limiting]
+        FINAL_RESP[Final Response]
     end
-
-    subgraph "Domain Layer"
-        AgentTools["Agent Tools"]
-        subgraph "Tools"
-            CarSearch["Car Search"]
-            Financing["Financing"]
-            KavakInfo["Kavak Info"]
-        end
-    end
-
-    subgraph "Infrastructure Layer"
-        CarCatalog["Car Catalog (CSV)"]
-        ChromaDB["ChromaDB (RAG)"]
-        OpenAIAPI["OpenAI API (LLM)"]
-        Redis["Redis (Memory)"]
-    end
-
-    WhatsApp --> TwilioWebhook
-    TestClient --> TestRoutes
-    TwilioWebhook --> KavakAgent
-    KavakAgent --> AgentExecutor
-    AgentExecutor --> CarSearch
-    AgentExecutor --> Financing
-    AgentExecutor --> KavakInfo
-    CarSearch --> CarCatalog
-    KavakInfo --> ChromaDB
-    KavakAgent --> OpenAIAPI
-    ChatHistory --> Redis
+    
+    %% Flow
+    USER_MSG --> AGENT_CORE
+    
+    %% Prompt Assembly (happens in _create_agent method)
+    AGENT_CORE --> SYS_PROMPT
+    SYS_PROMPT --> PERSONA
+    PERSONA --> ANTI_HALLUC
+    ANTI_HALLUC --> CHAIN_VERIFY
+    CHAIN_VERIFY --> FEW_SHOT
+    FEW_SHOT --> CONTEXT
+    
+    %% LLM Processing (process_message method)
+    CONTEXT --> LLM
+    LLM --> EXECUTOR
+    
+    %% Tool Execution (AgentExecutor decides which tools to use)
+    EXECUTOR --> T1
+    EXECUTOR --> T2
+    EXECUTOR --> T3
+    EXECUTOR --> T4
+    EXECUTOR --> T5
+    EXECUTOR --> T6
+    EXECUTOR --> T7
+    EXECUTOR --> T8
+    
+    %% Response Pipeline (_optimize_for_whatsapp method)
+    T1 --> RESPONSE_GEN
+    T2 --> RESPONSE_GEN
+    T3 --> RESPONSE_GEN
+    T4 --> RESPONSE_GEN
+    T5 --> RESPONSE_GEN
+    T6 --> RESPONSE_GEN
+    T7 --> RESPONSE_GEN
+    T8 --> RESPONSE_GEN
+    
+    RESPONSE_GEN --> WHATSAPP_OPT
+    WHATSAPP_OPT --> EMOJI_ADD
+    EMOJI_ADD --> CHAR_LIMIT
+    CHAR_LIMIT --> FINAL_RESP
+    
+    %% Styling
+    classDef inputLayer fill:#e3f2fd
+    classDef promptLayer fill:#f3e5f5
+    classDef agentLayer fill:#fff3e0
+    classDef toolLayer fill:#e8f5e8
+    classDef responseLayer fill:#fce4ec
+    
+    class USER_MSG inputLayer
+    class SYS_PROMPT,PERSONA,ANTI_HALLUC,CHAIN_VERIFY,FEW_SHOT,CONTEXT promptLayer
+    class AGENT_CORE,LLM,EXECUTOR agentLayer
+    class T1,T2,T3,T4,T5,T6,T7,T8 toolLayer
+    class RESPONSE_GEN,WHATSAPP_OPT,EMOJI_ADD,CHAR_LIMIT,FINAL_RESP responseLayer
 ```
 
-### Layer Responsibilities
+## Data Flow Diagram
 
-#### Interface Layer
-* **Twilio Webhook Handler**: Receives and processes WhatsApp messages
-* **Health Check**: Monitors system health and dependencies
-* **Test Routes**: Endpoints for testing and development
+Show how data flows through the system:
 
-#### Application Layer
-* **Kavak Sales Agent**: Orchestrates the conversation flow
-* **Agent Executor**: Executes the agent with tools
-* **Chat History**: Manages conversation context
-* **Prompting**: Defines system prompts and personas
-
-#### Domain Layer
-* **Car Search**: Tools for searching and filtering vehicles
-* **Financing**: Tools for calculating payment options
-* **Kavak Info**: Tools for retrieving company information
-
-#### Infrastructure Layer
-* **Car Catalog**: CSV data source for vehicle information
-* **ChromaDB**: Vector database for RAG implementation
-* **OpenAI API**: LLM provider for natural language processing
-* **Redis**: In-memory database for conversation storage
-
-### Data Flow
-
-1. **User Message Flow**:
-   ```ascii
-   WhatsApp User → Twilio → FastAPI Webhook → Agent → Tools → Response → WhatsApp
-   ```
-
-2. **RAG Query Flow**:
-   ```ascii
-   User Query → Agent → get_kavak_info Tool → ChromaDB → Response
-   ```
-
-3. **Financing Calculation Flow**:
-   ```ascii
-   User Request → Agent → Financing Tool → Calculation → Formatted Response
-   ```
+```mermaid
+sequenceDiagram
+    participant User as WhatsApp User
+    participant Twilio as Twilio Webhook
+    participant API as FastAPI App
+    participant Agent as Kavak Agent
+    participant Tools as Agent Tools
+    participant Data as Data Sources
+    participant Memory as Redis Memory
+    participant LLM as OpenAI GPT-4o
+    
+    User->>Twilio: WhatsApp Message
+    Twilio->>API: HTTP POST /webhook/whatsapp
+    API->>Agent: process_message()
+    
+    Agent->>Memory: Load conversation history
+    Memory-->>Agent: Previous context
+    
+    Agent->>LLM: Generate response with context + tools
+    LLM->>Agent: Tool selection & reasoning
+    
+    alt Car Search Request
+        Agent->>Tools: search_cars_by_budget()
+        Tools->>Data: Query car catalog CSV
+        Data-->>Tools: Matching cars
+        Tools-->>Agent: Formatted results
+    else Financing Request
+        Agent->>Tools: calculate_financing()
+        Tools->>Tools: Mathematical calculations
+        Tools-->>Agent: Payment plan
+    else Kavak Info Request
+        Agent->>Tools: get_kavak_info()
+        Tools->>Data: RAG query to ChromaDB
+        Data-->>Tools: Relevant knowledge
+        Tools-->>Agent: Information response
+    end
+    
+    Agent->>Agent: Optimize for WhatsApp
+    Agent->>Memory: Save conversation turn
+    Agent-->>API: Optimized Spanish response
+    API-->>Twilio: TwiML Response
+    Twilio-->>User: WhatsApp Message
+    
+    Note over User,LLM: Complete conversation cycle<br/>with context preservation
+```
 
 ### Knowledge Base & RAG System
 
@@ -914,9 +1099,68 @@ Once the services are running, the FastAPI application will typically be accessi
 
 The WhatsApp webhook endpoint will be `http://<your-ngrok-or-public-url>/webhook/whatsapp`, which you'll need to configure in your Twilio console.
 
+## Production Roadmap & Strategy
+
+### How to Put This in Production?
+
+#### Cloud Deployment Strategy
+- **AWS/GCP/Azure**
+- **Infrastructure as Code**
+- **Container Orchestration**
+- **Serverless Options**
+
+#### CI/CD Pipeline
+- **Automated Testing**
+- **Blue/Green Deployments**
+- **Feature Flags**
+- **Automated Rollbacks**
+
+#### Security & Compliance
+- **Secrets Management**: Use AWS Secrets Manager or HashiCorp Vault
+- **Network Security**: VPC, security groups, and WAF configuration
+- **Compliance**: Data protection compliance for user data
+- **Regular Audits**
+
+#### Monitoring & Observability
+- **Metrics Collection**: Prometheus for metrics, Grafana for visualization
+- **Logging**: Centralized logging
+- **Alerting**: Proactive alerting
+
+### How to Evaluate Agent Performance?
+
+#### Technical Metrics
+- **Response Time**
+- **Uptime & Reliability**
+- **Resource Utilization**
+
+#### Business Metrics
+- **Conversion Rate**
+- **User Retention**
+- **Customer Satisfaction**
+- **Cost per Interaction**
+
+#### Quality Metrics
+- **Hallucination Rate**
+- **Language Quality**
+- **Tool Usage**
+- **Context Retention**
+
+### How to Prevent Regressions?
+
+#### Testing Strategy
+- **Automated Test Suite**
+- **Golden Dataset Testing**
+- **Load Testing**
+
+#### Monitoring & Safety
+- **A/B Testing Framework**
+- **Shadow Testing**
+- **Canary Deployments**
+- **Automated Rollbacks**
+
 ## Future Enhancements
 
-* **Multi-language support**: Extend beyond Spanish to support other languages
+* **Multi-language support**: Extend beyond Spanish to support other languages (English, Portuguese, Turkish)
 * **Voice message integration**: Add support for WhatsApp voice messages
 * **Image recognition**: Process car images sent by users
 * **Advanced analytics**: Track user interactions and preferences

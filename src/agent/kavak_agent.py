@@ -11,7 +11,13 @@ from langchain_openai import ChatOpenAI
 
 from ..config import MEXICAN_CONFIG, SPANISH_ERROR_RESPONSES, settings
 from ..core.logging import get_logger
-from .prompts import KAVAK_SYSTEM_PROMPT, MEXICAN_SALES_PERSONA
+from .prompts import (
+    KAVAK_SYSTEM_PROMPT,
+    MEXICAN_SALES_PERSONA,
+    ANTI_HALLUCINATION_INSTRUCTIONS,
+    FEW_SHOT_EXAMPLES,
+    CHAIN_OF_VERIFICATION,
+)
 
 logger = get_logger(__name__)
 
@@ -34,22 +40,35 @@ class KavakSalesAgent:
         self.agent_executor = self._create_agent()
 
     def _setup_llm(self) -> ChatOpenAI:
-        """Sets up the language model"""
+        """Configura el modelo de lenguaje con parámetros optimizados para precisión"""
         return ChatOpenAI(
             model=settings.openai.OPENAI_MODEL,
-            temperature=0.7,  # Slightly creative for sales conversations
+            temperature=0.5,  # A little creative for sales conversations
             openai_api_key=settings.openai.OPENAI_API_KEY,
             max_tokens=1000,  # Limit for WhatsApp optimization
+            model_kwargs={
+                "top_p": 0.9,  # Control of creativity
+                "frequency_penalty": 0.2,  # Reduce repetitions
+                "presence_penalty": 0.1,  # Encourage new topics
+            },
         )
 
     def _create_agent(self) -> AgentExecutor:
-        """Creates the agent executor with tools"""
+        """Crea el ejecutor del agente con herramientas y prompts optimizados"""
 
-        # Create prompt template with Mexican Spanish persona
+        # Combinar todos los componentes del sistema en un solo mensaje
+        system_message = f"""
+        {KAVAK_SYSTEM_PROMPT}
+        {ANTI_HALLUCINATION_INSTRUCTIONS}
+        {CHAIN_OF_VERIFICATION}
+        {FEW_SHOT_EXAMPLES}
+        {MEXICAN_SALES_PERSONA}
+        """
+
+        # Crear plantilla de prompt con todos los componentes
         prompt = ChatPromptTemplate.from_messages(
             [
-                ("system", KAVAK_SYSTEM_PROMPT),
-                ("system", MEXICAN_SALES_PERSONA),
+                ("system", system_message),
                 MessagesPlaceholder(variable_name="chat_history"),
                 ("human", "{input}"),
                 MessagesPlaceholder(variable_name="agent_scratchpad"),
@@ -185,8 +204,8 @@ class KavakSalesAgent:
             return []
 
         messages = []
-        # Only use last 5 turns to manage context
-        for turn in conversation_history[-5:]:
+        # Only use last 10 turns to manage context
+        for turn in conversation_history[-10:]:
             if "user" in turn and "agent" in turn:
                 messages.append(HumanMessage(content=turn["user"]))
                 messages.append(AIMessage(content=turn["agent"]))

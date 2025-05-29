@@ -3,28 +3,25 @@ Twilio WhatsApp Webhook Handler
 """
 
 import time
+
 from fastapi import APIRouter, Form, HTTPException, status
 from fastapi.responses import Response
 from twilio.twiml.messaging_response import MessagingResponse
 
-from src.agent.kavak_agent import create_kavak_agent
-from src.config import SPANISH_ERROR_RESPONSES
-from src.core.logging import get_logger
-from src.schemas.responses import TestAgentRequest, TestAgentResponse
-from src.tools.car_search import (
+from ..agent.kavak_agent import create_kavak_agent
+from ..agent.redis_memory import redis_memory
+from ..core.logging import get_logger
+from ..tools.car_search import (
     get_popular_cars,
     search_cars_by_budget,
     search_specific_car,
 )
-from src.tools.financing import (
-    calculate_budget_by_monthly_payment,
+from ..tools.financing import (
     calculate_financing,
+    calculate_budget_by_monthly_payment,
     calculate_multiple_options,
 )
-from src.tools.kavak_info import (
-    get_kavak_info,
-    schedule_appointment,
-)
+from ..tools.kavak_info import get_kavak_info, schedule_appointment
 
 # Configure logging
 logger = get_logger(__name__)
@@ -55,9 +52,6 @@ def get_kavak_agent():
 
 # Global agent instance
 kavak_agent = get_kavak_agent()
-
-# Simple in-memory conversation storage (for demo - use Redis in production)
-conversation_memory = {}
 
 
 @router.post(
@@ -147,7 +141,7 @@ async def whatsapp_webhook(
 
         # Get conversation context
         session_id = f"whatsapp_{user_phone}"
-        conversation_history = conversation_memory.get(session_id, [])
+        conversation_history = redis_memory.get_conversation(session_id)
 
         # Process message with Kavak agent
         agent_response = await process_with_kavak_agent(
@@ -160,7 +154,7 @@ async def whatsapp_webhook(
         conversation_history.append(
             {"user": Body, "agent": agent_response, "timestamp": MessageSid}
         )
-        conversation_memory[session_id] = conversation_history[-10:]
+        redis_memory.save_conversation(session_id, conversation_history)
 
         # Create TwiML response
         twiml_response = MessagingResponse()
@@ -263,7 +257,7 @@ async def process_with_kavak_agent(
 
         if not response or response.strip() == "":
             logger.warning("Agent returned empty response, using fallback")
-            return SPANISH_ERROR_RESPONSES["empty_response"]
+            return "¡Hola! Soy tu agente comercial de Kavak 🚗"
 
         return response
 
@@ -326,7 +320,7 @@ async def process_with_kavak_agent(
 
         else:
             logger.warning(f"Using general error fallback for message: {message}")
-            return SPANISH_ERROR_RESPONSES["general_error"]
+            return "¡Ups! Algo salió mal. Por favor, inténtalo de nuevo en un momento."
 
 
 @router.get(
@@ -373,7 +367,6 @@ async def webhook_status():
 
 @router.post(
     "/test-agent",
-    response_model=TestAgentResponse,
     status_code=status.HTTP_200_OK,
     summary="Test the Kavak AI Agent",
     description="""
@@ -411,7 +404,7 @@ async def webhook_status():
     },
     tags=["Testing"],
 )
-async def test_agent_locally(request: TestAgentRequest):
+async def test_agent_locally(message: str, session_id: str = "test_session"):
     """
     Test endpoint for local agent testing
 
@@ -421,15 +414,15 @@ async def test_agent_locally(request: TestAgentRequest):
     try:
         start_time = time.time()
         response = await process_with_kavak_agent(
-            message=request.message,
-            session_id=request.session_id,
-            conversation_history=conversation_memory.get(request.session_id, []),
+            message=message,
+            session_id=session_id,
+            conversation_history=redis_memory.get_conversation(session_id),
         )
 
         return {
-            "user_message": request.message,
+            "user_message": message,
             "agent_response": response,
-            "session_id": request.session_id,
+            "session_id": session_id,
             "processing_time": time.time() - start_time,
         }
 
@@ -473,13 +466,14 @@ async def clear_conversation(session_id: str):
 
     - **session_id**: The ID of the session to clear (required)
     """
-    if session_id in conversation_memory:
-        del conversation_memory[session_id]
+    # Delete conversation from Redis
+    success = redis_memory.delete_conversation(session_id)
+
+    if success:
         return {"message": f"Conversation {session_id} cleared"}
     else:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Conversation {session_id} not found",
+            status_code=404, detail=f"Conversation {session_id} not found"
         )
 
 
@@ -518,16 +512,15 @@ async def list_conversations():
     - message_count: Number of messages in the conversation
     - last_message: Content of the last message in the conversation
     """
-    from datetime import datetime, timezone
-
-    sessions = []
-    for session_id, history in conversation_memory.items():
-        sessions.append(
-            {
-                "session_id": session_id,
-                "message_count": len(history),
-                "last_message": history[-1].get("content") if history and isinstance(history[-1], dict) else None,
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            }
-        )
+    active_sessions = redis_memory.list_active_sessions()
+    sessions = [
+        {
+            "session_id": session_id,
+            "message_count": metadata["message_count"],
+            "last_message": metadata["last_message"],
+            "ttl_seconds": metadata["ttl_seconds"],
+            "last_activity": metadata["last_activity"],
+        }
+        for session_id, metadata in active_sessions.items()
+    ]
     return {"sessions": sessions}

@@ -73,20 +73,49 @@ Welcome to the Kavak AI Sales Agent project! This is an intelligent car sales ch
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd commercial_agent
+   cd sales_agent
    ```
 
 2. **Run the setup script**
+
    ```bash
    make setup
    ```
+
    This will:
    - Create a `.env` file from `.env.example` if it doesn't exist
    - Install all Python dependencies using `uv`
-   - Set up the Kavak knowledge base
+   - Provide next steps for setting up the knowledge base
 
-3. **Configure your environment**
+3. **Start the required services**
+
+   Start all necessary services with one of these options:
+
+   ```bash
+   # For development with ngrok (recommended for WhatsApp testing)
+   # This includes API, ChromaDB, Redis, and ngrok for webhook testing
+   docker-compose --profile dev up -d
+   
+   # Or for core services only (API, ChromaDB and Redis):
+   docker-compose up -d
+   ```
+
+   This will start all required services including ChromaDB for the knowledge base.
+
+4. **Set up the knowledge base**
+
+   ```bash
+   make setup-knowledge
+   ```
+
+   This will populate the ChromaDB with Kavak's knowledge base.
+
+   > **Note:** For more details about the knowledge base implementation, see the [Knowledge Base & RAG System](#knowledge-base--rag-system) section.
+
+5. **Configure your environment**
+
    Edit the `.env` file with your API keys:
+
    ```bash
    # API Keys
    OPENAI_API_KEY=your_openai_key_here
@@ -98,16 +127,7 @@ Welcome to the Kavak AI Sales Agent project! This is an intelligent car sales ch
    NGROK_AUTHTOKEN=your_ngrok_token
    ```
 
-4. **Start the services**
-   ```bash
-   # For development with ngrok (recommended for WhatsApp testing)
-   docker-compose --profile dev up -d
-   
-   # Or for core services only
-   docker-compose up -d
-   ```
-
-5. **Configure Twilio Webhook** (for WhatsApp integration)
+6. **Configure Twilio Webhook** (for WhatsApp integration)
    - Get the webhook URL: `docker-compose logs -f ngrok-url`
    - Go to [Twilio Console WhatsApp Sandbox](https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn)
    - Set the webhook URL in the "When a message comes in" field

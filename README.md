@@ -87,34 +87,9 @@ Welcome to the Kavak AI Sales Agent project! This is an intelligent car sales ch
    - Install all Python dependencies using `uv`
    - Provide next steps for setting up the knowledge base
 
-3. **Start the required services**
+3. **Configure your environment**
 
-   Start all necessary services with one of these options:
-
-   ```bash
-   # For development with ngrok (recommended for WhatsApp testing)
-   # This includes API, ChromaDB, Redis, and ngrok for webhook testing
-   docker-compose --profile dev up -d
-   
-   # Or for core services only (API, ChromaDB and Redis):
-   docker-compose up -d
-   ```
-
-   This will start all required services including ChromaDB for the knowledge base.
-
-4. **Set up the knowledge base**
-
-   ```bash
-   make setup-knowledge
-   ```
-
-   This will populate the ChromaDB with Kavak's knowledge base.
-
-   > **Note:** For more details about the knowledge base implementation, see the [Knowledge Base & RAG System](#knowledge-base--rag-system) section.
-
-5. **Configure your environment**
-
-   Edit the `.env` file with your API keys:
+   Edit the `.env` file with your API keys before starting the services:
 
    ```bash
    # API Keys
@@ -127,11 +102,48 @@ Welcome to the Kavak AI Sales Agent project! This is an intelligent car sales ch
    NGROK_AUTHTOKEN=your_ngrok_token
    ```
 
+4. **Start the required services**
+
+   Choose one of the following options to start the necessary services:
+
+   **Option 1: Development with ngrok (recommended for WhatsApp testing)**
+
+   ```bash
+   # Includes API, ChromaDB, Redis, and ngrok for webhook testing
+   docker-compose --profile dev up -d
+   ```
+
+   **Option 2: Core services only**
+
+   ```bash
+   # Includes API, ChromaDB, and Redis
+   docker-compose up -d
+   ```
+
+   This will start all required services including ChromaDB for the knowledge base.
+
+5. **Set up the knowledge base**
+
+   ```bash
+   make setup-knowledge
+   ```
+
+   This will populate the ChromaDB with Kavak's knowledge base.
+
+   > **Note:** For more details about the knowledge base implementation, see the [Knowledge Base & RAG System](#knowledge-base--rag-system) section.
+
 6. **Configure Twilio Webhook** (for WhatsApp integration)
-   - Get the webhook URL: `docker-compose logs -f ngrok-url`
-   - Go to [Twilio Console WhatsApp Sandbox](https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn)
-   - Set the webhook URL in the "When a message comes in" field
-   - Save changes
+
+   Get the webhook URL by running:
+
+   ```bash
+   docker-compose logs -f ngrok-url
+   ```
+
+   Then:
+   1. Go to [Twilio Console WhatsApp Sandbox](https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn)
+   2. Set the webhook URL in the "When a message comes in" field
+   3. Save changes
 
 ### Verify Installation
 
@@ -157,12 +169,10 @@ curl -X POST http://localhost:8000/webhook/test \
 You can test the agent without WhatsApp using the test endpoint:
 
 ```bash
-curl -X POST http://localhost:8000/webhook/test \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": "Busco una camioneta familiar con presupuesto de 300,000 pesos",
-    "session_id": "test_session"
-  }'
+curl -X 'POST' \
+  'http://localhost:8000/webhook/test-agent?message=busco%20camioneta%20de%20400000&session_id=test_session' \
+  -H 'accept: application/json' \
+  -d ''
 ```
 
 ### Common User Interactions

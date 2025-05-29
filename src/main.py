@@ -57,7 +57,7 @@ app = FastAPI(
     },
     license_info={
         "name": "MIT License",
-        "url": "https://github.com/ferdinandbracho/kavak_challenge/blob/main/LICENSE",
+        "url": "https://github.com/ferdinandbracho/sales_agent/blob/main/LICENSE",
     },
     openapi_tags=[
         {

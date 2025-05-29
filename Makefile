@@ -15,15 +15,20 @@ setup: ## Initial project setup
 		echo "⚠️  Please edit .env file with your API keys"; \
 		echo "⚠️  Required: OPENAI_API_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN"; \
 		echo ""; \
-		echo "📝 Edit .env file and then run 'make dev'"; \
+		echo "📝 After editing .env, run 'docker-compose up -d' to start services"; \
+		echo "📝 Then run 'make setup-knowledge' to set up the knowledge base"; \
 	else \
 		echo "✅ .env file already exists"; \
+		echo "📝 Run 'docker-compose up -d' to start services"; \
+		echo "📝 Then run 'make setup-knowledge' to set up the knowledge base"; \
 	fi
 	@echo "📦 Installing dependencies with uv..."
 	uv sync
-	@echo "📚 Setting up Kavak knowledge base..."
-	uv run python scripts/setup_knowledge_base.py
-	@echo "✅ Setup complete!"
+	@echo "✅ Basic setup complete!"
+	@echo "🚀 Next steps:"
+	@echo "  1. Start services: docker-compose up -d"
+	@echo "  2. Setup knowledge base: make setup-knowledge"
+	@echo "  3. Start development: make dev"
 
 setup-knowledge: ## Setup Kavak knowledge base (scraping + fallback)
 	@echo "🌐 Setting up Kavak knowledge base..."

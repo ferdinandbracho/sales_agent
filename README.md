@@ -11,7 +11,7 @@ Welcome to the Kavak AI Sales Agent project! This is an intelligent car sales ch
 
 ## ⚠️ Disclaimer
 
-**Important**: This is an independent project and is not affiliated with, endorsed by, or connected to Kavak in any way. It's a demonstration project only.
+**Important**: This is an independent project and is not affiliated with Kavak. It's a demonstration project only.
 
 ## Table of Contents
 

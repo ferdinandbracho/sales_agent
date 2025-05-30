@@ -16,7 +16,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from src.config import settings
 from scrape_kavak import (
     KavakWebScraper,
-)  # Assuming this is in the same directory or PYTHONPATH
+)
 
 # Configure logging
 logging.basicConfig(
@@ -56,9 +56,7 @@ def _ensure_metadata_types(metadata: Dict[str, Any]) -> Dict[str, Any]:
         if isinstance(value, (str, int, float, bool)):
             compatible_metadata[key] = value
         elif isinstance(value, (list, dict, tuple)):
-            compatible_metadata[key] = json.dumps(
-                value
-            )  # Serialize complex types to JSON strings
+            compatible_metadata[key] = json.dumps(value)
         else:
             compatible_metadata[key] = str(value)
     return compatible_metadata
@@ -166,7 +164,7 @@ def setup_kavak_knowledge_base():
         client = chromadb.HttpClient(
             host=settings.chroma.CHROMA_HOST, port=settings.chroma.CHROMA_PORT
         )
-        client.heartbeat()  # Test connection
+        client.heartbeat()
         logger.info(
             f"Connected to ChromaDB server at http://{settings.chroma.CHROMA_HOST}:{settings.chroma.CHROMA_PORT}"
         )
@@ -274,6 +272,6 @@ def setup_kavak_knowledge_base():
 
 
 if __name__ == "__main__":
-    logger.info("Executing Kavak Knowledge Base Setup Script (with chunking)...")
+    logger.info("Executing Kavak Knowledge Base Setup Script")
     setup_kavak_knowledge_base()
     logger.info("Kavak Knowledge Base Setup Script finished.")

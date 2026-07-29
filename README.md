@@ -1,4 +1,4 @@
-# Kavak AI Sales Agent for WhatsApp
+# AI Sales Agent for WhatsApp
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.95.0-009688.svg)](https://fastapi.tiangolo.com/)
@@ -7,7 +7,7 @@
 
 ## Overview
 
-Welcome to the Kavak AI Sales Agent project! This is an intelligent car sales chatbot for the Mexican market, designed to interact with users via WhatsApp. The agent assists users in finding cars, understanding financing options, and answering questions about Kavak's services, all in Spanish (Mexican dialect).
+Welcome to the AI Sales Agent project! This is an intelligent car sales chatbot for the Mexican market, designed to interact with users via WhatsApp. The agent assists users in finding cars, understanding financing options, and answering questions about Kavak's services, all in Spanish (Mexican dialect).
 
 ## ⚠️ Disclaimer
 
